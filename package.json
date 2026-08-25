@@ -45,7 +45,6 @@
     "@sentry/cli": true,
     "protobufjs": true,
     "esbuild": true,
-    "esbuild": true,
     "@swc/core": true
   }
 }
