@@ -79,6 +79,27 @@ describe('userService', () => {
     expect(dependencies.userRepository.getCurrentUser).not.toHaveBeenCalled();
   });
 
+  it('초기화 도중 세션을 지우면 늦게 도착한 응답을 현재 세션으로 복원하지 않는다', async () => {
+    const dependencies = createDependencies();
+    let resolveInitialization!: (session: UserSession) => void;
+    dependencies.userRepository.initializeUserSession.mockReturnValue(
+      new Promise((resolve) => {
+        resolveInitialization = resolve;
+      }),
+    );
+    const userService = createUserService(dependencies);
+
+    const pendingInitialization = userService.initializeCurrentUser();
+    await Promise.resolve();
+    userService.clearCurrentUserSession();
+    resolveInitialization(initialSession);
+    await pendingInitialization;
+
+    await expect(userService.getCurrentUser()).rejects.toMatchObject({
+      code: 'USER_SESSION_NOT_INITIALIZED',
+    });
+  });
+
   it('닉네임 앞뒤 공백을 제거해 현재 회원 정보만 변경한다', async () => {
     const dependencies = createDependencies();
     const userService = createUserService(dependencies);

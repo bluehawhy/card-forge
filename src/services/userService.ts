@@ -27,6 +27,7 @@ export function createUserService({
 }: UserServiceDependencies): UserService {
   let currentUserSession: UserSession | null = null;
   let pendingInitialization: Promise<UserSession> | null = null;
+  let sessionGeneration = 0;
 
   async function initializeCurrentUser(): Promise<UserSession> {
     if (currentUserSession !== null) {
@@ -37,18 +38,24 @@ export function createUserService({
       return pendingInitialization;
     }
 
-    pendingInitialization = (async () => {
+    const initializationGeneration = sessionGeneration;
+    const initialization = (async () => {
       const tossGameUserHash = await gameUserIdentityProvider.getGameUserHash();
       const initializedUserSession =
         await userRepository.initializeUserSession(tossGameUserHash);
-      currentUserSession = initializedUserSession;
+      if (sessionGeneration === initializationGeneration) {
+        currentUserSession = initializedUserSession;
+      }
       return initializedUserSession;
     })();
+    pendingInitialization = initialization;
 
     try {
-      return await pendingInitialization;
+      return await initialization;
     } finally {
-      pendingInitialization = null;
+      if (pendingInitialization === initialization) {
+        pendingInitialization = null;
+      }
     }
   }
 
@@ -87,6 +94,7 @@ export function createUserService({
   }
 
   function clearCurrentUserSession(): void {
+    sessionGeneration += 1;
     currentUserSession = null;
     pendingInitialization = null;
   }

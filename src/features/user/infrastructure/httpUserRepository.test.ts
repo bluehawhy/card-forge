@@ -69,7 +69,7 @@ describe('httpUserRepository', () => {
     );
   });
 
-  it('서버 오류 메시지를 UserError로 전달한다', async () => {
+  it('서버 응답 본문을 노출하지 않고 상태 코드만 UserError로 전달한다', async () => {
     const fetchImplementation = jest
       .fn()
       .mockResolvedValue(
@@ -84,7 +84,21 @@ describe('httpUserRepository', () => {
       repository.getCurrentUser('blocked-token'),
     ).rejects.toMatchObject({
       code: 'USER_API_REQUEST_FAILED',
-      message: '사용이 정지된 회원입니다.',
+      message: '회원 API 요청에 실패했습니다. (403)',
     });
+  });
+
+  it('성공 응답도 회원 세션 형식이 아니면 거절한다', async () => {
+    const fetchImplementation = jest
+      .fn()
+      .mockResolvedValue(createJsonResponse({ accessToken: 'token-only' }));
+    const repository = createHttpUserRepository({
+      apiBaseUrl: 'https://api.card-forge.example',
+      fetchImplementation,
+    });
+
+    await expect(
+      repository.initializeUserSession('toss-game-user-hash-001'),
+    ).rejects.toMatchObject({ code: 'INVALID_USER_API_RESPONSE' });
   });
 });

@@ -3,16 +3,13 @@ import type {
   UpdateCurrentUserProfileInput,
   UserSession,
 } from '../domain/user';
+import { USER_ACCOUNT_STATUSES } from '../domain/user';
 import { UserError } from '../domain/userError';
 import type { UserRepository } from '../ports/userRepository';
 
 export interface HttpUserRepositoryOptions {
   apiBaseUrl: string;
   fetchImplementation?: typeof fetch;
-}
-
-interface ErrorResponseBody {
-  message?: string;
 }
 
 export function createHttpUserRepository({
@@ -24,6 +21,7 @@ export function createHttpUserRepository({
   async function requestJson<ResponseBody>(
     path: string,
     requestInit: RequestInit,
+    isValidResponseBody: (value: unknown) => value is ResponseBody,
   ): Promise<ResponseBody> {
     let response: Response;
 
@@ -44,50 +42,59 @@ export function createHttpUserRepository({
     const responseBody = parseResponseBody(responseText);
 
     if (!response.ok) {
-      const errorMessage =
-        isErrorResponseBody(responseBody) &&
-        typeof responseBody.message === 'string'
-          ? responseBody.message
-          : `회원 API 요청에 실패했습니다. (${response.status})`;
-
-      throw new UserError('USER_API_REQUEST_FAILED', errorMessage);
-    }
-
-    if (responseBody === null) {
       throw new UserError(
         'USER_API_REQUEST_FAILED',
-        '회원 API 응답 본문이 비어 있습니다.',
+        `회원 API 요청에 실패했습니다. (${response.status})`,
       );
     }
 
-    return responseBody as ResponseBody;
+    if (!isValidResponseBody(responseBody)) {
+      throw new UserError(
+        'INVALID_USER_API_RESPONSE',
+        '회원 API 응답 형식이 올바르지 않습니다.',
+      );
+    }
+
+    return responseBody;
   }
 
   return {
     initializeUserSession(tossGameUserHash: string): Promise<UserSession> {
-      return requestJson<UserSession>('/api/v1/user-sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tossGameUserHash }),
-      });
+      return requestJson<UserSession>(
+        '/api/v1/user-sessions',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tossGameUserHash }),
+        },
+        isUserSession,
+      );
     },
 
     getCurrentUser(accessToken: string): Promise<CurrentUserProfile> {
-      return requestJson<CurrentUserProfile>('/api/v1/users/me', {
-        method: 'GET',
-        headers: createAuthorizedHeaders(accessToken),
-      });
+      return requestJson<CurrentUserProfile>(
+        '/api/v1/users/me',
+        {
+          method: 'GET',
+          headers: createAuthorizedHeaders(accessToken),
+        },
+        isCurrentUserProfile,
+      );
     },
 
     updateCurrentUserProfile(
       accessToken: string,
       profileInput: UpdateCurrentUserProfileInput,
     ): Promise<CurrentUserProfile> {
-      return requestJson<CurrentUserProfile>('/api/v1/users/me', {
-        method: 'PATCH',
-        headers: createAuthorizedHeaders(accessToken),
-        body: JSON.stringify(profileInput),
-      });
+      return requestJson<CurrentUserProfile>(
+        '/api/v1/users/me',
+        {
+          method: 'PATCH',
+          headers: createAuthorizedHeaders(accessToken),
+          body: JSON.stringify(profileInput),
+        },
+        isCurrentUserProfile,
+      );
     },
   };
 }
@@ -115,12 +122,30 @@ function parseResponseBody(responseText: string): unknown | null {
   }
 }
 
-function isErrorResponseBody(
-  responseBody: unknown,
-): responseBody is ErrorResponseBody {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isCurrentUserProfile(value: unknown): value is CurrentUserProfile {
   return (
-    typeof responseBody === 'object' &&
-    responseBody !== null &&
-    'message' in responseBody
+    isRecord(value) &&
+    isNonEmptyString(value.userId) &&
+    isNonEmptyString(value.displayName) &&
+    USER_ACCOUNT_STATUSES.some((status) => status === value.accountStatus) &&
+    isNonEmptyString(value.createdAt) &&
+    isNonEmptyString(value.lastSignedInAt)
+  );
+}
+
+function isUserSession(value: unknown): value is UserSession {
+  return (
+    isRecord(value) &&
+    isNonEmptyString(value.accessToken) &&
+    isCurrentUserProfile(value.user) &&
+    typeof value.isNewUser === 'boolean'
   );
 }

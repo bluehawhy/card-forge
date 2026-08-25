@@ -82,6 +82,8 @@ React Native용 `@apps-in-toss/framework`의 `getUserKeyForGame()`을 호출한�
 
 회원 서버와 JSON을 주고받는 실제 HTTP 구현이다. API 주소와 `fetch` 구현을 외부에서 받기 때문에 운영 서버, 개발 서버, 자동 테스트에서 같은 코드를 재사용할 수 있다.
 
+성공 응답도 런타임에서 회원·세션 형식을 검증한다. 서버 오류 본문의 임의 메시지나 응답 원문은 사용자 오류에 포함하지 않는다.
+
 ### `services/userService.ts`
 
 화면에서 사용하는 회원 기능의 단일 진입점이다.
@@ -94,6 +96,7 @@ React Native용 `@apps-in-toss/framework`의 `getUserKeyForGame()`을 호출한�
 | `clearCurrentUserSession` | 없음 | `void` | 메모리에 보관한 현재 세션 제거 |
 
 동시에 `initializeCurrentUser()`가 여러 번 호출돼도 서버 초기화 요청은 한 번만 전송한다.
+초기화 도중 세션을 지우면 늦게 도착한 응답이 세션을 다시 복원하지 않는다.
 
 ## 5. 다른 개발자의 사용 방법
 
@@ -187,6 +190,8 @@ Content-Type: application/json
 ```
 
 ## 7. 현재 구현 범위와 다음 작업
+
+게임 결과, 카드 획득, 강화 성공 여부, 재화 및 포인트 증감은 서버 권한 영역이다. 클라이언트는 결과를 표시하고 요청할 뿐 최종 값을 확정하거나 원장 데이터를 직접 변경하지 않는다.
 
 이번 구현에 포함된 것:
 
