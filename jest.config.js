@@ -4,6 +4,7 @@ const path = require('path');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const config = require('@granite-js/react-native/jest').config({
   rootDir: __dirname,
+  testPathIgnorePatterns: ['<rootDir>/apps/server/'],
   moduleNameMapper: {
     '@babel/runtime(.*)': `${path.dirname(require.resolve('@babel/runtime/package.json'))}$1`,
   },

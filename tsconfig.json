@@ -20,5 +20,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["*.ts", "*.js", "pages/**/*.ts", "pages/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"]
 }

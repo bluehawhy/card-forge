@@ -1,6 +1,8 @@
 # 회원 기능 구조 설명서
 
-> 구현 브랜치: `feature/user-membership`  
+> 클라이언트 구현: `src/features/user`, `src/services/userService.ts`
+>
+> 서버 구현: `apps/server`
 > 대상 앱: Apps in Toss 게임 미니앱 · Granite React Native · TypeScript
 
 ## 1. 구현 목적
@@ -203,10 +205,16 @@ Content-Type: application/json
 - 서버와 공유할 명확한 TypeScript 타입
 - 단위 테스트
 
+추가로 구현된 서버 범위:
+
+- NestJS 회원 API와 PostgreSQL 회원·지갑·세션 테이블
+- 앱인토스 식별키 mTLS 검증 어댑터
+- hash와 access token의 digest 저장
+- 회원·기본 지갑의 단일 DB 트랜잭션 생성
+- 만료·정지·탈퇴·폐기 세션 차단과 현재 세션 폐기 API
+
 아직 포함되지 않은 것:
 
-- NestJS 회원 API와 PostgreSQL 테이블
-- 서버의 앱인토스 식별키 mTLS 검증
 - access token의 안전한 영구 저장
 - React 전역 UserProvider 또는 Zustand 연결
 - 회원 탈퇴 UI와 운영 정책

@@ -1,13 +1,18 @@
 {
   "name": "card-forge",
   "private": true,
+  "workspaces": [
+    "apps/server"
+  ],
   "scripts": {
     "dev": "granite dev",
     "build": "ait build",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "lint": "biome check --write",
-    "deploy": "ait deploy"
+    "deploy": "ait deploy",
+    "server:build": "npm run build --workspace @card-forge/server",
+    "server:test": "npm test --workspace @card-forge/server"
   },
   "dependencies": {
     "@apps-in-toss/framework": "^2.10.10",
