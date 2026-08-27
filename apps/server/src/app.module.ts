@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import {
+  AD_REWARD_VERIFIER,
+  UNCONFIGURED_AD_REWARD_VERIFIER,
+} from './ads/ad-reward.verifier';
 import { CardsController } from './cards/cards.controller';
 import { CardsService } from './cards/cards.service';
 import { GAME_REPOSITORY } from './cards/gameplay.types';
@@ -43,6 +47,10 @@ import { PacksService } from './packs/packs.service';
     EnhancementService,
     ExchangeService,
     FraudDetectionService,
+    {
+      provide: AD_REWARD_VERIFIER,
+      useValue: UNCONFIGURED_AD_REWARD_VERIFIER,
+    },
     {
       provide: PACK_REWARD_POLICY,
       useValue: UNCONFIGURED_PACK_REWARD_POLICY,

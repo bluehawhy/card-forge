@@ -1,12 +1,11 @@
 import {
-  BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
-import { readTokenDigest, requireRequestId } from './game-auth';
+import { readTokenDigest } from './game-auth';
 import { GAME_REPOSITORY, type GameRepository } from './gameplay.types';
 
 @Injectable()
@@ -34,23 +33,4 @@ export class CardsService {
     if (!card) throw new NotFoundException('CARD_NOT_FOUND');
     return card;
   }
-
-  sell(
-    authorization: string | undefined,
-    requestIdHeader: string | undefined,
-    cardId: string,
-  ) {
-    if (!isUuid(cardId)) throw new BadRequestException('INVALID_CARD_ID');
-    return this.games.sellCard({
-      tokenDigest: readTokenDigest(authorization, this.config),
-      requestId: requireRequestId(requestIdHeader),
-      cardId,
-    });
-  }
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
 }

@@ -8,8 +8,8 @@ export type Grade =
   | 'SUPER_RARE'
   | 'UNIQUE'
   | 'LEGENDARY';
-export type PackType = 'FREE' | 'AD';
-export type EnhancementResult = 'SUCCESS' | 'FAILURE' | 'DESTROYED';
+export type PackType = 'AD';
+export type EnhancementResult = 'SUCCESS' | 'FAILURE';
 
 export interface PackAvailability {
   packType: PackType;
@@ -27,7 +27,12 @@ export interface OwnedCard {
   grade: Grade;
   imageKey: string;
   enhancementLevel: number;
-  status: 'OWNED' | 'DESTROYED' | 'SOLD';
+  status:
+    | 'ENHANCEABLE'
+    | 'ENHANCEMENT_LOCKED'
+    | 'MAX_LEVEL'
+    | 'DESTROYED'
+    | 'SOLD';
   acquiredAt: string;
 }
 
@@ -61,6 +66,7 @@ export interface GameRepository {
     element: Element;
     grade: Grade;
     probabilityVersion: string;
+    adCompletionId: string;
   }): Promise<{ card: OwnedCard; replayed: boolean }>;
   enhance(input: {
     tokenDigest: string;
@@ -68,9 +74,8 @@ export interface GameRepository {
     cardId: string;
     expectedLevel: number;
     result: EnhancementResult;
-    coinCost: number;
-    ashReward: number;
     probabilityVersion: string;
+    adCompletionId: string;
   }): Promise<{
     card: OwnedCard | null;
     result: EnhancementResult;

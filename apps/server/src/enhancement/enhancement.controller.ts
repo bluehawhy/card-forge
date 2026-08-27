@@ -7,8 +7,13 @@ export class EnhancementController {
   @Post() enhance(
     @Headers('authorization') authorization: string | undefined,
     @Headers('idempotency-key') requestId: string | undefined,
-    @Body() body: { cardId?: unknown },
+    @Body() body: { cardId?: unknown; adCompletionId?: unknown },
   ) {
-    return this.enhancement.enhance(authorization, requestId, body.cardId);
+    return this.enhancement.enhance(
+      authorization,
+      requestId,
+      body.cardId,
+      body.adCompletionId,
+    );
   }
 }

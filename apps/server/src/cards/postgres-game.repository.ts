@@ -8,6 +8,7 @@ import {
 import { Inject } from '@nestjs/common';
 import { Pool, type PoolClient } from 'pg';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
+import { CARD_STORAGE_CAPACITY, DAILY_AD_PACK_LIMIT } from './game-rules-v2';
 import type {
   CardSaleResult,
   EnhancementResult,
@@ -43,7 +44,7 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
     const userId = await this.resolveUserId(this.pool, tokenDigest);
     if (!userId) return null;
     const result = await this.pool.query<CardRow>(
-      `${CARD_SELECT} WHERE uc.user_id = $1 AND uc.status = 'OWNED' ORDER BY uc.acquired_at DESC`,
+      `${CARD_SELECT} WHERE uc.user_id = $1 AND uc.status IN ('ENHANCEABLE','ENHANCEMENT_LOCKED','MAX_LEVEL') ORDER BY uc.acquired_at ASC`,
       [userId],
     );
     return result.rows.map(toCard);
@@ -151,13 +152,27 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
         if (!response) throw new ConflictException('REQUEST_IN_PROGRESS');
         return { card: response.card, replayed: true };
       }
-      const limit = input.packType === 'FREE' ? 1 : 10;
+      const storage = await client.query<{ count: string }>(
+        `SELECT count(*)::text count FROM user_cards WHERE user_id=$1 AND status IN ('ENHANCEABLE','ENHANCEMENT_LOCKED','MAX_LEVEL')`,
+        [userId],
+      );
+      if (Number(storage.rows[0]?.count ?? 0) >= CARD_STORAGE_CAPACITY)
+        throw new ConflictException('CARD_STORAGE_FULL');
       const count = await client.query<{ count: string }>(
         `SELECT count(*)::text count FROM pack_openings WHERE user_id=$1 AND pack_type=$2 AND opened_at >= (date_trunc('day', timezone('Asia/Seoul', now())) AT TIME ZONE 'Asia/Seoul')`,
         [userId, input.packType],
       );
-      if (Number(count.rows[0]?.count ?? 0) >= limit)
+      if (Number(count.rows[0]?.count ?? 0) >= DAILY_AD_PACK_LIMIT)
         throw new ConflictException('DAILY_PACK_LIMIT_REACHED');
+      const receipt = await client.query<{ id: string }>(
+        `INSERT INTO ad_reward_receipts (user_id,completion_id,purpose,status,consumed_at,request_id)
+         VALUES ($1,$2,'PACK','CONSUMED',now(),$3)
+         ON CONFLICT DO NOTHING RETURNING id`,
+        [userId, input.adCompletionId, input.requestId],
+      );
+      const adReceiptId = receipt.rows[0]?.id;
+      if (!adReceiptId)
+        throw new ConflictException('AD_COMPLETION_ALREADY_USED');
       const template = await client.query<{ id: string }>(
         'SELECT id FROM card_templates WHERE element=$1 AND grade=$2',
         [input.element, input.grade],
@@ -174,13 +189,14 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
         inserted.rows[0]?.card_id ?? '',
       );
       await client.query(
-        'INSERT INTO pack_openings (user_id, request_id, pack_type, probability_version, user_card_id) VALUES ($1,$2,$3,$4,$5)',
+        'INSERT INTO pack_openings (user_id, request_id, pack_type, probability_version, user_card_id, ad_receipt_id) VALUES ($1,$2,$3,$4,$5,$6)',
         [
           userId,
           input.requestId,
           input.packType,
           input.probabilityVersion,
           card.cardId,
+          adReceiptId,
         ],
       );
       await this.finishRequest(
@@ -211,7 +227,7 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
       `SELECT count(*)::text used_today, ((date_trunc('day', timezone('Asia/Seoul', now())) + interval '1 day') AT TIME ZONE 'Asia/Seoul') next_reset_at FROM pack_openings WHERE user_id=$1 AND pack_type=$2 AND opened_at >= (date_trunc('day', timezone('Asia/Seoul', now())) AT TIME ZONE 'Asia/Seoul')`,
       [userId, packType],
     );
-    const dailyLimit = packType === 'FREE' ? 1 : 10;
+    const dailyLimit = DAILY_AD_PACK_LIMIT;
     const usedToday = Number(result.rows[0]?.used_today ?? 0);
     const nextResetAt = result.rows[0]?.next_reset_at;
     if (!nextResetAt) throw new Error('PACK_RESET_TIME_UNAVAILABLE');
@@ -245,61 +261,42 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
         return { ...response, replayed: true };
       }
       const locked = await client.query<{ enhancement_level: number }>(
-        `SELECT enhancement_level FROM user_cards WHERE id=$1 AND user_id=$2 AND status='OWNED' FOR UPDATE`,
+        `SELECT enhancement_level FROM user_cards WHERE id=$1 AND user_id=$2 AND status='ENHANCEABLE' FOR UPDATE`,
         [input.cardId, userId],
       );
       const level = locked.rows[0]?.enhancement_level;
       if (level === undefined) throw new NotFoundException('CARD_NOT_FOUND');
       if (level !== input.expectedLevel)
         throw new ConflictException('CARD_LEVEL_CHANGED');
-      const wallet = await client.query<{ arcana_coin: string }>(
-        'UPDATE user_wallets SET arcana_coin=arcana_coin-$2, version=version+1 WHERE user_id=$1 AND arcana_coin >= $2 RETURNING arcana_coin::text',
-        [userId, input.coinCost],
+      const receipt = await client.query<{ id: string }>(
+        `INSERT INTO ad_reward_receipts (user_id,completion_id,purpose,status,consumed_at,request_id)
+         VALUES ($1,$2,'ENHANCEMENT','CONSUMED',now(),$3)
+         ON CONFLICT DO NOTHING RETURNING id`,
+        [userId, input.adCompletionId, input.requestId],
       );
-      if (!wallet.rows[0])
-        throw new ConflictException('INSUFFICIENT_ARCANA_COIN');
-      let card: OwnedCard | null;
+      const adReceiptId = receipt.rows[0]?.id;
+      if (!adReceiptId)
+        throw new ConflictException('AD_COMPLETION_ALREADY_USED');
+      let card: OwnedCard;
       if (input.result === 'SUCCESS') {
         await client.query(
-          'UPDATE user_cards SET enhancement_level=enhancement_level+1, updated_at=now() WHERE id=$1',
+          `UPDATE user_cards
+           SET enhancement_level=enhancement_level+1,
+               status=CASE WHEN enhancement_level+1=10 THEN 'MAX_LEVEL' ELSE 'ENHANCEABLE' END,
+               updated_at=now()
+           WHERE id=$1`,
           [input.cardId],
         );
         card = await this.loadCard(client, userId, input.cardId);
-      } else if (input.result === 'DESTROYED') {
+      } else {
         await client.query(
-          `UPDATE user_cards SET status='DESTROYED', updated_at=now() WHERE id=$1`,
+          `UPDATE user_cards SET status='ENHANCEMENT_LOCKED', updated_at=now() WHERE id=$1`,
           [input.cardId],
         );
-        const ash = await client.query<{ black_ash: string }>(
-          'UPDATE user_wallets SET black_ash=black_ash+$2, version=version+1 WHERE user_id=$1 RETURNING black_ash::text',
-          [userId, input.ashReward],
-        );
-        await client.query(
-          `INSERT INTO currency_ledger (user_id,currency_type,amount_delta,balance_after,reason,reference_id,request_id) VALUES ($1,'BLACK_ASH',$2,$3,'CARD_DESTROYED',$4,$5)`,
-          [
-            userId,
-            input.ashReward,
-            ash.rows[0]?.black_ash ?? '0',
-            input.cardId,
-            input.requestId,
-          ],
-        );
-        card = null;
-      } else {
         card = await this.loadCard(client, userId, input.cardId);
       }
       await client.query(
-        `INSERT INTO currency_ledger (user_id,currency_type,amount_delta,balance_after,reason,reference_id,request_id) VALUES ($1,'ARCANA_COIN',$2,$3,'CARD_ENHANCEMENT',$4,$5)`,
-        [
-          userId,
-          -input.coinCost,
-          wallet.rows[0]?.arcana_coin ?? '0',
-          input.cardId,
-          input.requestId,
-        ],
-      );
-      await client.query(
-        'INSERT INTO enhancement_logs (user_id,user_card_id,request_id,before_level,after_level,result,probability_version,coin_cost) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+        'INSERT INTO enhancement_logs (user_id,user_card_id,request_id,before_level,after_level,result,probability_version,coin_cost,ad_receipt_id) VALUES ($1,$2,$3,$4,$5,$6,$7,0,$8)',
         [
           userId,
           input.cardId,
@@ -308,7 +305,7 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
           card?.enhancementLevel ?? null,
           input.result,
           input.probabilityVersion,
-          input.coinCost,
+          adReceiptId,
         ],
       );
       const response = { card, result: input.result };
@@ -351,18 +348,6 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
         if (!response) throw new ConflictException('REQUEST_IN_PROGRESS');
         return { ...response, replayed: true };
       }
-      const used = await client.query<{ points: string }>(
-        `SELECT coalesce(sum(point_amount),0)::text points FROM point_exchanges WHERE user_id=$1 AND status IN ('PENDING','SUCCEEDED') AND created_at >= date_trunc('day',now())`,
-        [userId],
-      );
-      if (Number(used.rows[0]?.points ?? 0) + input.pointAmount > 3)
-        throw new ConflictException('DAILY_POINT_LIMIT_REACHED');
-      const monthlyUsed = await client.query<{ points: string }>(
-        `SELECT coalesce(sum(point_amount),0)::text points FROM point_exchanges WHERE user_id=$1 AND status IN ('PENDING','SUCCEEDED') AND created_at >= date_trunc('month',now())`,
-        [userId],
-      );
-      if (Number(monthlyUsed.rows[0]?.points ?? 0) + input.pointAmount > 90)
-        throw new ConflictException('MONTHLY_POINT_LIMIT_REACHED');
       const wallet = await client.query<{ enhancement_crystal: string }>(
         'UPDATE user_wallets SET enhancement_crystal=enhancement_crystal-$2, version=version+1 WHERE user_id=$1 AND enhancement_crystal >= $2 RETURNING enhancement_crystal::text',
         [userId, input.crystalAmount],
