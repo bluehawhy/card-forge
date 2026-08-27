@@ -11,6 +11,14 @@ export type Grade =
 export type PackType = 'FREE' | 'AD';
 export type EnhancementResult = 'SUCCESS' | 'FAILURE' | 'DESTROYED';
 
+export interface PackAvailability {
+  packType: PackType;
+  dailyLimit: number;
+  usedToday: number;
+  remainingToday: number;
+  nextResetAt: string;
+}
+
 export interface OwnedCard {
   cardId: string;
   templateId: string;
@@ -42,6 +50,10 @@ export interface GameRepository {
     requestId: string;
     cardId: string;
   }): Promise<CardSaleResult>;
+  getPackAvailability(
+    tokenDigest: string,
+    packType: PackType,
+  ): Promise<PackAvailability | null>;
   openPack(input: {
     tokenDigest: string;
     requestId: string;

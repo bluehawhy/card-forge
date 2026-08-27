@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import type { ServerConfig } from '../config';
 import { PostgresGameRepository } from './postgres-game.repository';
@@ -59,6 +60,73 @@ describe('PostgresGameRepository card sale', () => {
       'request_1234',
     ]);
     expect(query).toHaveBeenCalledWith('COMMIT');
+    expect(client.release).toHaveBeenCalled();
+  });
+});
+
+describe('PostgresGameRepository free pack availability', () => {
+  it('서울 시간 기준 오늘 사용량과 다음 초기화 시각을 반환한다', async () => {
+    const query = jest.fn(async (sql: string) => {
+      if (sql.startsWith('SELECT u.id')) return { rows: [{ id: 'user-id' }] };
+      return {
+        rows: [
+          {
+            used_today: '0',
+            next_reset_at: new Date('2026-08-28T15:00:00.000Z'),
+          },
+        ],
+      };
+    });
+    const repository = new PostgresGameRepository(config);
+    Object.assign(repository, { pool: { query } });
+
+    await expect(
+      repository.getPackAvailability('digest', 'FREE'),
+    ).resolves.toEqual({
+      packType: 'FREE',
+      dailyLimit: 1,
+      usedToday: 0,
+      remainingToday: 1,
+      nextResetAt: '2026-08-28T15:00:00.000Z',
+    });
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining("timezone('Asia/Seoul', now())"),
+      ['user-id', 'FREE'],
+    );
+  });
+
+  it('오늘 이미 무료팩을 열었다면 카드 발급 전에 롤백한다', async () => {
+    const query = jest.fn(async (sql: string) => {
+      if (sql.startsWith('SELECT u.id')) return { rows: [{ id: 'user-id' }] };
+      if (sql.startsWith('INSERT INTO idempotency_requests'))
+        return { rows: [], rowCount: 1 };
+      if (sql.startsWith('SELECT count(*)')) return { rows: [{ count: '1' }] };
+      return { rows: [], rowCount: 1 };
+    });
+    const client = {
+      query,
+      release: jest.fn(),
+    } as unknown as PoolClient;
+    const repository = new PostgresGameRepository(config);
+    Object.assign(repository, {
+      pool: { connect: jest.fn().mockResolvedValue(client) },
+    });
+
+    await expect(
+      repository.openPack({
+        tokenDigest: 'digest',
+        requestId: 'free_pack_1234',
+        packType: 'FREE',
+        element: 'FIRE',
+        grade: 'NORMAL',
+        probabilityVersion: 'pack-test-v1',
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(query).toHaveBeenCalledWith('ROLLBACK');
+    expect(query).not.toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO user_cards'),
+      expect.anything(),
+    );
     expect(client.release).toHaveBeenCalled();
   });
 });

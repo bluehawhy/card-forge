@@ -1,32 +1,45 @@
-import { randomInt } from 'node:crypto';
 import {
   BadRequestException,
   Inject,
   Injectable,
-  ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { readTokenDigest, requireRequestId } from '../cards/game-auth';
 import {
-  type Element,
   GAME_REPOSITORY,
   type GameRepository,
-  type Grade,
   type PackType,
 } from '../cards/gameplay.types';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
-
-const ELEMENTS: Element[] = ['FIRE', 'WATER', 'EARTH', 'WIND', 'LIGHT', 'DARK'];
-// GAME_RULES.md에서 출시 전 확정하기로 한 값이다. 확정 전까지 팩 개봉을 막는다.
-const GRADE_THRESHOLDS: ReadonlyArray<{ grade: Grade; max: number }> | null =
-  null;
+import {
+  PACK_REWARD_POLICY,
+  type PackRewardPolicy,
+} from './pack-reward.policy';
 
 @Injectable()
 export class PacksService {
-  static readonly probabilityVersion = 'pack-v1';
   constructor(
     @Inject(GAME_REPOSITORY) private readonly games: GameRepository,
     @Inject(SERVER_CONFIG) private readonly config: ServerConfig,
+    @Inject(PACK_REWARD_POLICY) private readonly rewards: PackRewardPolicy,
   ) {}
+
+  async freeStatus(authorization: string | undefined) {
+    const availability = await this.games.getPackAvailability(
+      readTokenDigest(authorization, this.config),
+      'FREE',
+    );
+    if (!availability)
+      throw new UnauthorizedException('INVALID_OR_EXPIRED_SESSION');
+    return availability;
+  }
+
+  openFree(
+    authorization: string | undefined,
+    requestIdHeader: string | undefined,
+  ) {
+    return this.open(authorization, requestIdHeader, 'FREE');
+  }
 
   open(
     authorization: string | undefined,
@@ -37,17 +50,14 @@ export class PacksService {
       throw new BadRequestException('INVALID_PACK_TYPE');
     const tokenDigest = readTokenDigest(authorization, this.config);
     const requestId = requireRequestId(requestIdHeader);
-    if (!GRADE_THRESHOLDS)
-      throw new ServiceUnavailableException('PACK_PROBABILITY_NOT_CONFIGURED');
-    const roll = randomInt(0, 10000);
+    const reward = this.rewards.draw();
     return this.games.openPack({
       tokenDigest,
       requestId,
       packType: packTypeValue as PackType,
-      element: ELEMENTS[randomInt(0, ELEMENTS.length)] ?? 'FIRE',
-      grade:
-        GRADE_THRESHOLDS.find((item) => roll < item.max)?.grade ?? 'NORMAL',
-      probabilityVersion: PacksService.probabilityVersion,
+      element: reward.element,
+      grade: reward.grade,
+      probabilityVersion: this.rewards.version,
     });
   }
 }
