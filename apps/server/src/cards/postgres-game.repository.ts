@@ -9,6 +9,7 @@ import { Inject } from '@nestjs/common';
 import { Pool, type PoolClient } from 'pg';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
 import type {
+  CardSaleResult,
   EnhancementResult,
   GameRepository,
   OwnedCard,
@@ -41,10 +42,80 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
     const userId = await this.resolveUserId(this.pool, tokenDigest);
     if (!userId) return null;
     const result = await this.pool.query<CardRow>(
-      `${CARD_SELECT} WHERE uc.user_id = $1 ORDER BY uc.acquired_at DESC`,
+      `${CARD_SELECT} WHERE uc.user_id = $1 AND uc.status = 'OWNED' ORDER BY uc.acquired_at DESC`,
       [userId],
     );
     return result.rows.map(toCard);
+  }
+
+  async sellCard(
+    input: Parameters<GameRepository['sellCard']>[0],
+  ): Promise<CardSaleResult> {
+    return this.transaction(async (client) => {
+      const userId = await this.requireUser(client, input.tokenDigest);
+      const claimed = await this.claimRequest(
+        client,
+        userId,
+        'CARD_SALE',
+        input.requestId,
+      );
+      if (!claimed) {
+        const replay = await client.query<{
+          response: Omit<CardSaleResult, 'replayed'>;
+        }>(
+          `SELECT response FROM idempotency_requests WHERE user_id=$1 AND scope='CARD_SALE' AND request_id=$2`,
+          [userId, input.requestId],
+        );
+        const response = replay.rows[0]?.response;
+        if (!response) throw new ConflictException('REQUEST_IN_PROGRESS');
+        return { ...response, replayed: true };
+      }
+
+      const locked = await client.query<{ enhancement_level: number }>(
+        `SELECT enhancement_level FROM user_cards WHERE id=$1 AND user_id=$2 AND status='OWNED' FOR UPDATE`,
+        [input.cardId, userId],
+      );
+      const enhancementLevel = locked.rows[0]?.enhancement_level;
+      if (enhancementLevel === undefined)
+        throw new NotFoundException('CARD_NOT_FOUND_OR_NOT_SELLABLE');
+      const crystalReward = saleRewardForLevel(enhancementLevel);
+
+      await client.query(
+        `UPDATE user_cards SET status='SOLD', updated_at=now() WHERE id=$1 AND user_id=$2`,
+        [input.cardId, userId],
+      );
+      const wallet = await client.query<{ enhancement_crystal: string }>(
+        'UPDATE user_wallets SET enhancement_crystal=enhancement_crystal+$2, version=version+1 WHERE user_id=$1 RETURNING enhancement_crystal::text',
+        [userId, crystalReward],
+      );
+      const crystalBalance = Number(wallet.rows[0]?.enhancement_crystal);
+      if (!Number.isSafeInteger(crystalBalance))
+        throw new Error('WALLET_NOT_FOUND_OR_BALANCE_UNSAFE');
+      await client.query(
+        `INSERT INTO currency_ledger (user_id,currency_type,amount_delta,balance_after,reason,reference_id,request_id) VALUES ($1,'ENHANCEMENT_CRYSTAL',$2,$3,'CARD_SOLD',$4,$5)`,
+        [userId, crystalReward, crystalBalance, input.cardId, input.requestId],
+      );
+
+      const response = {
+        cardId: input.cardId,
+        enhancementLevel,
+        crystalReward,
+        crystalBalance,
+      };
+      await this.finishRequest(
+        client,
+        userId,
+        'CARD_SALE',
+        input.requestId,
+        response,
+      );
+      await this.insertAudit(client, userId, 'CARD_SOLD', input.requestId, {
+        cardId: input.cardId,
+        enhancementLevel,
+        crystalReward,
+      });
+      return { ...response, replayed: false };
+    });
   }
 
   async getCard(
@@ -434,4 +505,14 @@ function toCard(row: CardRow): OwnedCard {
     status: row.status,
     acquiredAt: row.acquired_at.toISOString(),
   };
+}
+
+const CARD_SALE_REWARDS = [
+  30, 60, 120, 300, 600, 1200, 2400, 4500, 7500, 15000, 30000,
+] as const;
+
+export function saleRewardForLevel(level: number): number {
+  const reward = CARD_SALE_REWARDS[level];
+  if (reward === undefined) throw new Error('INVALID_ENHANCEMENT_LEVEL');
+  return reward;
 }

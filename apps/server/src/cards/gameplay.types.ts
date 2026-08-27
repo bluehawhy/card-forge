@@ -23,12 +23,25 @@ export interface OwnedCard {
   acquiredAt: string;
 }
 
+export interface CardSaleResult {
+  cardId: string;
+  enhancementLevel: number;
+  crystalReward: number;
+  crystalBalance: number;
+  replayed: boolean;
+}
+
 export interface GameRepository {
   listCards(tokenDigest: string): Promise<OwnedCard[] | null>;
   getCard(
     tokenDigest: string,
     cardId: string,
   ): Promise<OwnedCard | null | undefined>;
+  sellCard(input: {
+    tokenDigest: string;
+    requestId: string;
+    cardId: string;
+  }): Promise<CardSaleResult>;
   openPack(input: {
     tokenDigest: string;
     requestId: string;
