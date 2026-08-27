@@ -8,7 +8,9 @@ import { EnhancementService } from '../enhancement/enhancement.service';
 import { ExchangeService } from '../exchange/exchange.service';
 import { FraudDetectionService } from '../fraud-detection/fraud-detection.service';
 import { PacksService } from '../packs/packs.service';
+import { CardsService } from './cards.service';
 import type { GameRepository, OwnedCard } from './gameplay.types';
+import { saleRewardForLevel } from './postgres-game.repository';
 
 const config: ServerConfig = {
   port: 3000,
@@ -28,6 +30,7 @@ function createRepository(): jest.Mocked<GameRepository> {
   return {
     listCards: jest.fn(),
     getCard: jest.fn(),
+    sellCard: jest.fn(),
     openPack: jest.fn(),
     enhance: jest.fn(),
     exchange: jest.fn(),
@@ -50,6 +53,48 @@ function card(level = 0): OwnedCard {
 }
 
 describe('server gameplay modules', () => {
+  it('강화 단계별 판매 결정량은 게임 규칙 보상표와 일치한다', () => {
+    expect(
+      Array.from({ length: 11 }, (_, level) => saleRewardForLevel(level)),
+    ).toEqual([30, 60, 120, 300, 600, 1200, 2400, 4500, 7500, 15000, 30000]);
+  });
+
+  it('카드 판매 요청은 토큰 digest와 idempotency key를 저장소에 전달한다', async () => {
+    const repository = createRepository();
+    repository.sellCard.mockResolvedValue({
+      cardId: '11111111-1111-4111-8111-111111111111',
+      enhancementLevel: 3,
+      crystalReward: 300,
+      crystalBalance: 3200,
+      replayed: false,
+    });
+    const service = new CardsService(repository, config);
+
+    await service.sell(
+      authorization,
+      requestId,
+      '11111111-1111-4111-8111-111111111111',
+    );
+
+    expect(repository.sellCard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestId,
+        cardId: '11111111-1111-4111-8111-111111111111',
+        tokenDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+      }),
+    );
+  });
+
+  it('잘못된 카드 ID는 판매 저장소 호출 전에 거절한다', () => {
+    const repository = createRepository();
+    const service = new CardsService(repository, config);
+
+    expect(() => service.sell(authorization, requestId, 'not-a-card')).toThrow(
+      BadRequestException,
+    );
+    expect(repository.sellCard).not.toHaveBeenCalled();
+  });
+
   it('미확정 팩 등급 확률로는 카드를 발급하지 않는다', () => {
     const repository = createRepository();
     const service = new PacksService(repository, config);
