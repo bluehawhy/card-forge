@@ -5,24 +5,17 @@ import { PacksService } from './packs.service';
 export class PacksController {
   constructor(@Inject(PacksService) private readonly packs: PacksService) {}
 
-  @Get('free/status') freeStatus(
+  @Get('status') status(
     @Headers('authorization') authorization: string | undefined,
   ) {
-    return this.packs.freeStatus(authorization);
-  }
-
-  @Post('free') openFree(
-    @Headers('authorization') authorization: string | undefined,
-    @Headers('idempotency-key') requestId: string | undefined,
-  ) {
-    return this.packs.openFree(authorization, requestId);
+    return this.packs.status(authorization);
   }
 
   @Post() open(
     @Headers('authorization') authorization: string | undefined,
     @Headers('idempotency-key') requestId: string | undefined,
-    @Body() body: { packType?: unknown },
+    @Body() body: { adCompletionId?: unknown },
   ) {
-    return this.packs.open(authorization, requestId, body.packType);
+    return this.packs.open(authorization, requestId, body.adCompletionId);
   }
 }

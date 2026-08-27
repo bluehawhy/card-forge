@@ -64,7 +64,7 @@ describe('PostgresGameRepository card sale', () => {
   });
 });
 
-describe('PostgresGameRepository free pack availability', () => {
+describe('PostgresGameRepository v2 ad pack availability', () => {
   it('서울 시간 기준 오늘 사용량과 다음 초기화 시각을 반환한다', async () => {
     const query = jest.fn(async (sql: string) => {
       if (sql.startsWith('SELECT u.id')) return { rows: [{ id: 'user-id' }] };
@@ -81,26 +81,26 @@ describe('PostgresGameRepository free pack availability', () => {
     Object.assign(repository, { pool: { query } });
 
     await expect(
-      repository.getPackAvailability('digest', 'FREE'),
+      repository.getPackAvailability('digest', 'AD'),
     ).resolves.toEqual({
-      packType: 'FREE',
-      dailyLimit: 1,
+      packType: 'AD',
+      dailyLimit: 20,
       usedToday: 0,
-      remainingToday: 1,
+      remainingToday: 20,
       nextResetAt: '2026-08-28T15:00:00.000Z',
     });
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining("timezone('Asia/Seoul', now())"),
-      ['user-id', 'FREE'],
+      ['user-id', 'AD'],
     );
   });
 
-  it('오늘 이미 무료팩을 열었다면 카드 발급 전에 롤백한다', async () => {
+  it('보관함이 5장이면 광고 영수증 소비와 카드 발급 전에 롤백한다', async () => {
     const query = jest.fn(async (sql: string) => {
       if (sql.startsWith('SELECT u.id')) return { rows: [{ id: 'user-id' }] };
       if (sql.startsWith('INSERT INTO idempotency_requests'))
         return { rows: [], rowCount: 1 };
-      if (sql.startsWith('SELECT count(*)')) return { rows: [{ count: '1' }] };
+      if (sql.startsWith('SELECT count(*)')) return { rows: [{ count: '5' }] };
       return { rows: [], rowCount: 1 };
     });
     const client = {
@@ -115,16 +115,17 @@ describe('PostgresGameRepository free pack availability', () => {
     await expect(
       repository.openPack({
         tokenDigest: 'digest',
-        requestId: 'free_pack_1234',
-        packType: 'FREE',
+        requestId: 'ad_pack_1234',
+        packType: 'AD',
         element: 'FIRE',
         grade: 'NORMAL',
         probabilityVersion: 'pack-test-v1',
+        adCompletionId: 'ad_completion_1234',
       }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(query).toHaveBeenCalledWith('ROLLBACK');
     expect(query).not.toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO user_cards'),
+      expect.stringContaining('INSERT INTO ad_reward_receipts'),
       expect.anything(),
     );
     expect(client.release).toHaveBeenCalled();

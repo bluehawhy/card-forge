@@ -1,9 +1,10 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { readTokenDigest, requireRequestId } from '../cards/game-auth';
+import { CRYSTALS_PER_TOSS_POINT_V2 } from '../cards/game-rules-v2';
 import { GAME_REPOSITORY, type GameRepository } from '../cards/gameplay.types';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
 
-export const CRYSTALS_PER_POINT = 3000;
+export const CRYSTALS_PER_POINT = CRYSTALS_PER_TOSS_POINT_V2;
 
 @Injectable()
 export class ExchangeService {
@@ -16,11 +17,7 @@ export class ExchangeService {
     requestIdHeader: string | undefined,
     pointAmountValue: unknown,
   ) {
-    if (
-      !Number.isInteger(pointAmountValue) ||
-      Number(pointAmountValue) < 1 ||
-      Number(pointAmountValue) > 3
-    )
+    if (!Number.isInteger(pointAmountValue) || Number(pointAmountValue) < 1)
       throw new BadRequestException('INVALID_POINT_AMOUNT');
     const pointAmount = Number(pointAmountValue);
     return this.games.exchange({

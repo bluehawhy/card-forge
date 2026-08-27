@@ -5,6 +5,7 @@ ALTER TABLE user_cards
   ADD COLUMN IF NOT EXISTS rules_version varchar(40) NOT NULL DEFAULT 'card-forge-rules-v1';
 
 UPDATE user_cards SET enhancement_level = 1 WHERE enhancement_level = 0;
+UPDATE user_cards SET status = 'ENHANCEABLE' WHERE status = 'OWNED';
 
 ALTER TABLE user_cards DROP CONSTRAINT IF EXISTS user_cards_enhancement_level_check;
 ALTER TABLE user_cards
@@ -14,21 +15,21 @@ ALTER TABLE user_cards
 ALTER TABLE user_cards DROP CONSTRAINT IF EXISTS user_cards_status_check;
 ALTER TABLE user_cards
   ADD CONSTRAINT user_cards_status_v2_check
-  CHECK (status IN ('OWNED', 'ENHANCEMENT_LOCKED', 'MAX_LEVEL', 'DESTROYED', 'SOLD'));
+  CHECK (status IN ('ENHANCEABLE', 'ENHANCEMENT_LOCKED', 'MAX_LEVEL', 'DESTROYED', 'SOLD'));
 
 ALTER TABLE user_cards ALTER COLUMN enhancement_level SET DEFAULT 1;
+ALTER TABLE user_cards ALTER COLUMN status SET DEFAULT 'ENHANCEABLE';
 ALTER TABLE user_cards ALTER COLUMN rules_version SET DEFAULT 'card-forge-rules-v2';
 
 CREATE TABLE ad_reward_receipts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  completion_id varchar(160) NOT NULL,
+  completion_id varchar(160) NOT NULL UNIQUE,
   purpose varchar(24) NOT NULL CHECK (purpose IN ('PACK', 'ENHANCEMENT', 'SALE')),
   status varchar(16) NOT NULL DEFAULT 'VERIFIED' CHECK (status IN ('VERIFIED', 'CONSUMED', 'REJECTED')),
   verified_at timestamptz NOT NULL DEFAULT now(),
   consumed_at timestamptz,
   request_id varchar(80),
-  UNIQUE (user_id, completion_id),
   UNIQUE (user_id, purpose, request_id)
 );
 
@@ -81,4 +82,3 @@ ALTER TABLE pack_openings
 
 ALTER TABLE enhancement_logs
   ADD COLUMN IF NOT EXISTS ad_receipt_id uuid REFERENCES ad_reward_receipts(id);
-

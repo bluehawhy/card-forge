@@ -1,6 +1,10 @@
 import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import {
+  AD_REWARD_VERIFIER,
+  type AdRewardVerifier,
+} from '../ads/ad-reward.verifier';
 import { GAME_REPOSITORY, type GameRepository } from '../cards/gameplay.types';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
 import {
@@ -23,7 +27,7 @@ const config: ServerConfig = {
 
 const authorization = `Bearer ${'a'.repeat(43)}`;
 
-describe('free pack HTTP integration', () => {
+describe('v2 ad pack HTTP integration', () => {
   let app: INestApplication;
   let baseUrl: string;
   const repository: jest.Mocked<GameRepository> = {
@@ -37,8 +41,11 @@ describe('free pack HTTP integration', () => {
     recordAudit: jest.fn(),
   };
   const rewardPolicy: PackRewardPolicy = {
-    version: 'pack-test-v1',
+    version: 'pack-test-v2',
     draw: () => ({ element: 'FIRE', grade: 'NORMAL' }),
+  };
+  const adVerifier: jest.Mocked<AdRewardVerifier> = {
+    verify: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -49,6 +56,7 @@ describe('free pack HTTP integration', () => {
         { provide: GAME_REPOSITORY, useValue: repository },
         { provide: SERVER_CONFIG, useValue: config },
         { provide: PACK_REWARD_POLICY, useValue: rewardPolicy },
+        { provide: AD_REWARD_VERIFIER, useValue: adVerifier },
       ],
     }).compile();
     app = module.createNestApplication();
@@ -64,29 +72,27 @@ describe('free pack HTTP integration', () => {
     jest.clearAllMocks();
   });
 
-  it('GET /free/status에서 오늘 남은 무료팩을 반환한다', async () => {
+  it('GET /status에서 오늘 남은 광고 카드팩을 반환한다', async () => {
     repository.getPackAvailability.mockResolvedValue({
-      packType: 'FREE',
-      dailyLimit: 1,
+      packType: 'AD',
+      dailyLimit: 20,
       usedToday: 0,
-      remainingToday: 1,
+      remainingToday: 20,
       nextResetAt: '2026-08-28T15:00:00.000Z',
     });
 
-    const response = await fetch(
-      `${baseUrl}/api/v1/pack-openings/free/status`,
-      {
-        headers: { authorization },
-      },
-    );
+    const response = await fetch(`${baseUrl}/api/v1/pack-openings/status`, {
+      headers: { authorization },
+    });
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(
-      expect.objectContaining({ remainingToday: 1, dailyLimit: 1 }),
+      expect.objectContaining({ remainingToday: 20, dailyLimit: 20 }),
     );
   });
 
-  it('POST /free가 서버 정책 결과와 idempotency key로 카드 발급을 요청한다', async () => {
+  it('검증된 광고 완료 1건과 idempotency key로 카드 1장을 요청한다', async () => {
+    adVerifier.verify.mockResolvedValue(true);
     repository.openPack.mockResolvedValue({
       card: {
         cardId: '11111111-1111-4111-8111-111111111111',
@@ -95,27 +101,55 @@ describe('free pack HTTP integration', () => {
         element: 'FIRE',
         grade: 'NORMAL',
         imageKey: 'cards/fire/normal.webp',
-        enhancementLevel: 0,
-        status: 'OWNED',
+        enhancementLevel: 1,
+        status: 'ENHANCEABLE',
         acquiredAt: '2026-08-27T00:00:00.000Z',
       },
       replayed: false,
     });
 
-    const response = await fetch(`${baseUrl}/api/v1/pack-openings/free`, {
+    const response = await fetch(`${baseUrl}/api/v1/pack-openings`, {
       method: 'POST',
-      headers: { authorization, 'idempotency-key': 'free_pack_1234' },
+      headers: {
+        authorization,
+        'content-type': 'application/json',
+        'idempotency-key': 'ad_pack_1234',
+      },
+      body: JSON.stringify({ adCompletionId: 'ad_completion_1234' }),
     });
 
     expect(response.status).toBe(201);
     expect(repository.openPack).toHaveBeenCalledWith(
       expect.objectContaining({
-        requestId: 'free_pack_1234',
-        packType: 'FREE',
+        requestId: 'ad_pack_1234',
+        packType: 'AD',
         element: 'FIRE',
         grade: 'NORMAL',
-        probabilityVersion: 'pack-test-v1',
+        probabilityVersion: 'pack-test-v2',
+        adCompletionId: 'ad_completion_1234',
       }),
     );
+    expect(adVerifier.verify).toHaveBeenCalledWith({
+      completionId: 'ad_completion_1234',
+      purpose: 'PACK',
+      subjectDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    });
+  });
+
+  it('광고 완료 검증이 실패하면 카드 지급 저장소를 호출하지 않는다', async () => {
+    adVerifier.verify.mockResolvedValue(false);
+
+    const response = await fetch(`${baseUrl}/api/v1/pack-openings`, {
+      method: 'POST',
+      headers: {
+        authorization,
+        'content-type': 'application/json',
+        'idempotency-key': 'ad_pack_rejected_1234',
+      },
+      body: JSON.stringify({ adCompletionId: 'ad_completion_rejected' }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(repository.openPack).not.toHaveBeenCalled();
   });
 });
