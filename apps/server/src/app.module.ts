@@ -17,6 +17,10 @@ import {
 } from './membership/membership.types';
 import { PostgresUserRepository } from './membership/postgres-user.repository';
 import { HttpTossGameUserVerifier } from './membership/toss-game-user.verifier';
+import {
+  PACK_REWARD_POLICY,
+  UNCONFIGURED_PACK_REWARD_POLICY,
+} from './packs/pack-reward.policy';
 import { PacksController } from './packs/packs.controller';
 import { PacksService } from './packs/packs.service';
 
@@ -39,6 +43,10 @@ import { PacksService } from './packs/packs.service';
     EnhancementService,
     ExchangeService,
     FraudDetectionService,
+    {
+      provide: PACK_REWARD_POLICY,
+      useValue: UNCONFIGURED_PACK_REWARD_POLICY,
+    },
     {
       provide: USER_REPOSITORY,
       inject: [SERVER_CONFIG],

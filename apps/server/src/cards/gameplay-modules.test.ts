@@ -7,6 +7,7 @@ import type { ServerConfig } from '../config';
 import { EnhancementService } from '../enhancement/enhancement.service';
 import { ExchangeService } from '../exchange/exchange.service';
 import { FraudDetectionService } from '../fraud-detection/fraud-detection.service';
+import { UNCONFIGURED_PACK_REWARD_POLICY } from '../packs/pack-reward.policy';
 import { PacksService } from '../packs/packs.service';
 import { CardsService } from './cards.service';
 import type { GameRepository, OwnedCard } from './gameplay.types';
@@ -31,6 +32,7 @@ function createRepository(): jest.Mocked<GameRepository> {
     listCards: jest.fn(),
     getCard: jest.fn(),
     sellCard: jest.fn(),
+    getPackAvailability: jest.fn(),
     openPack: jest.fn(),
     enhance: jest.fn(),
     exchange: jest.fn(),
@@ -97,7 +99,11 @@ describe('server gameplay modules', () => {
 
   it('미확정 팩 등급 확률로는 카드를 발급하지 않는다', () => {
     const repository = createRepository();
-    const service = new PacksService(repository, config);
+    const service = new PacksService(
+      repository,
+      config,
+      UNCONFIGURED_PACK_REWARD_POLICY,
+    );
 
     expect(() => service.open(authorization, requestId, 'FREE')).toThrow(
       ServiceUnavailableException,
@@ -107,7 +113,11 @@ describe('server gameplay modules', () => {
 
   it('지원하지 않는 팩 종류는 저장소 호출 전에 거절한다', () => {
     const repository = createRepository();
-    const service = new PacksService(repository, config);
+    const service = new PacksService(
+      repository,
+      config,
+      UNCONFIGURED_PACK_REWARD_POLICY,
+    );
 
     expect(() => service.open(authorization, requestId, 'PAID')).toThrow(
       BadRequestException,

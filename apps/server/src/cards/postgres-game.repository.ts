@@ -13,6 +13,7 @@ import type {
   EnhancementResult,
   GameRepository,
   OwnedCard,
+  PackAvailability,
 } from './gameplay.types';
 
 interface CardRow {
@@ -152,7 +153,7 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
       }
       const limit = input.packType === 'FREE' ? 1 : 10;
       const count = await client.query<{ count: string }>(
-        `SELECT count(*)::text count FROM pack_openings WHERE user_id=$1 AND pack_type=$2 AND opened_at >= date_trunc('day', now())`,
+        `SELECT count(*)::text count FROM pack_openings WHERE user_id=$1 AND pack_type=$2 AND opened_at >= (date_trunc('day', timezone('Asia/Seoul', now())) AT TIME ZONE 'Asia/Seoul')`,
         [userId, input.packType],
       );
       if (Number(count.rows[0]?.count ?? 0) >= limit)
@@ -195,6 +196,32 @@ export class PostgresGameRepository implements GameRepository, OnModuleDestroy {
       });
       return { card, replayed: false };
     });
+  }
+
+  async getPackAvailability(
+    tokenDigest: string,
+    packType: PackAvailability['packType'],
+  ): Promise<PackAvailability | null> {
+    const userId = await this.resolveUserId(this.pool, tokenDigest);
+    if (!userId) return null;
+    const result = await this.pool.query<{
+      used_today: string;
+      next_reset_at: Date;
+    }>(
+      `SELECT count(*)::text used_today, ((date_trunc('day', timezone('Asia/Seoul', now())) + interval '1 day') AT TIME ZONE 'Asia/Seoul') next_reset_at FROM pack_openings WHERE user_id=$1 AND pack_type=$2 AND opened_at >= (date_trunc('day', timezone('Asia/Seoul', now())) AT TIME ZONE 'Asia/Seoul')`,
+      [userId, packType],
+    );
+    const dailyLimit = packType === 'FREE' ? 1 : 10;
+    const usedToday = Number(result.rows[0]?.used_today ?? 0);
+    const nextResetAt = result.rows[0]?.next_reset_at;
+    if (!nextResetAt) throw new Error('PACK_RESET_TIME_UNAVAILABLE');
+    return {
+      packType,
+      dailyLimit,
+      usedToday,
+      remainingToday: Math.max(0, dailyLimit - usedToday),
+      nextResetAt: nextResetAt.toISOString(),
+    };
   }
 
   async enhance(input: Parameters<GameRepository['enhance']>[0]) {
