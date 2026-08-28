@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, Image, ImageBackground, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { createRoute, useNavigation } from '@granite-js/react-native';
-import { Layers, Hammer, Gift, Coins } from 'lucide-react-native';
 
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange' | '/about' | '/';
 
@@ -88,7 +87,7 @@ function HomePage() {
           <View style={styles.characterContainer}>
             <Image
               source={{
-                uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/characters/rose.jpg?raw=true',
+                uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/index/index.jpg?raw=true',
               }}
               style={styles.characterImage}
               resizeMode="cover"
@@ -111,9 +110,12 @@ function HomePage() {
 
         <View style={styles.grid}>
           <TouchableOpacity style={styles.menuButton} onPress={() => handleNavigate('/cards')}>
-            {/* 아이콘을 감싸는 뱃지 라운드 */}
-            <View style={[styles.iconBadge, { backgroundColor: '#E8F3FF' }]}>
-              <Text style={styles.menuIcon}>🎴</Text>
+            <View style={[styles.iconBadge, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={{ uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/index/%EB%B3%B4%EA%B4%80%ED%95%A8.png?raw=true' }}
+                style={styles.menuIconImage}
+                resizeMode="contain"
+              />
             </View>
             <Text style={styles.menuText}>보관함</Text>
             <Text style={styles.menuDescription}>내 카드 보기</Text>
@@ -123,7 +125,13 @@ function HomePage() {
             style={styles.menuButton}
             onPress={() => handleNavigate('/forge')}
           >
-            <Text style={styles.menuIcon}>⚒️</Text>
+            <View style={[styles.iconBadge, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={{ uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/index/%EA%B0%95%ED%99%94%EC%86%8C.png?raw=true' }}
+                style={styles.menuIconImage}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.menuText}>강화소</Text>
             <Text style={styles.menuDescription}>카드 강화</Text>
           </TouchableOpacity>
@@ -132,7 +140,13 @@ function HomePage() {
             style={styles.menuButton}
             onPress={() => handleNavigate('/packs')}
           >
-            <Text style={styles.menuIcon}>🎁</Text>
+            <View style={[styles.iconBadge, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={{ uri: 'https://raw.githubusercontent.com/bluehawhy/card-forge/refs/heads/main/assets/images/index/%EC%B9%B4%EB%93%9C%ED%8C%A9.avif' }}
+                style={styles.menuIconImage}
+                resizeMode="contain"
+              />
+              </View>
             <Text style={styles.menuText}>카드팩</Text>
             <Text style={styles.menuDescription}>새로운 카드</Text>
           </TouchableOpacity>
@@ -141,7 +155,13 @@ function HomePage() {
             style={styles.menuButton}
             onPress={() => handleNavigate('/exchange')}
           >
-            <Text style={styles.menuIcon}>🪙</Text>
+            <View style={[styles.iconBadge, { backgroundColor: 'transparent' }]}>
+              <Image
+                source={{ uri: 'https://raw.githubusercontent.com/bluehawhy/card-forge/refs/heads/main/assets/images/index/%EA%B5%90%ED%99%98%EC%86%8C.avif' }}
+                style={styles.menuIconImage}
+                resizeMode="contain"
+              />
+              </View>
             <Text style={styles.menuText}>교환소</Text>
             <Text style={styles.menuDescription}>아이템 교환</Text>
           </TouchableOpacity>
@@ -368,6 +388,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#191F28',
     marginBottom: 2,
+  },
+
+  menuIconImage: {
+    width: 24, 
+    height: 24,
   },
 
   menuDescription: {
