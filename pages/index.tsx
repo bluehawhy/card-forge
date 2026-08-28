@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ImageBackground, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { createRoute, useNavigation } from '@granite-js/react-native';
+import LinearGradient from 'react-native-linear-gradient';
 
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange' | '/about' | '/';
 
@@ -92,6 +93,15 @@ function HomePage() {
               style={styles.characterImage}
               resizeMode="cover"
             />
+            {/* 👈 캐릭터 왼쪽 경계를 자연스럽게 어둡게 덮어주는 그라데이션 */}
+            <LinearGradient
+              colors={['#252B42', 'transparent']} // 왼쪽: 카드 배경색, 오른쪽: 투명
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0.6, y: 0 }}
+              style={styles.leftFadeOverlay}
+            />
+
+            {/* 하단 별 오버레이 */}
             <View style={styles.starsOverlay}>
               <Text style={styles.characterStars}>
                 ★ ★ ★ ★ ★
@@ -276,6 +286,16 @@ const styles = StyleSheet.create({
     height: '100%',
     position: 'relative',
     zIndex: 1,
+  },
+
+  /* 캐릭터 왼쪽 경계 그라데이션 오버레이 */
+  leftFadeOverlay: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '50%', // 캐릭터 이미지 좌측 절반 부분에 그라데이션 적용
+    zIndex: 2,
   },
 
   characterImage: {
