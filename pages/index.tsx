@@ -87,7 +87,7 @@ function HomePage() {
           <View style={styles.characterContainer}>
             <Image
               source={{
-                uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/index/index.jpg?raw=true',
+                uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/index/characters/rose.jpg?raw=true',
               }}
               style={styles.characterImage}
               resizeMode="cover"
