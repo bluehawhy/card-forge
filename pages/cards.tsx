@@ -1,39 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { createRoute } from '@apps-in-toss/granite';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import { cardService } from '../src/services/cardService';
 
-export default createRoute({
-  component: function CardsPage() {
-    const [cards, setCards] = useState<any[]>([]);
-
-    useEffect(() => {
-      cardService.getUserCards().then(setCards);
-    }, []);
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>카드 보관함</Text>
-        <FlatList
-          data={cards}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.cardItem} 
-              onPress={() => createRoute.navigate(`/card-detail?id=${item.id}`)}
-            >
-              <Text style={styles.elementBadge}>{item.element}</Text>
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.enhanceText}>+{item.enhanceLevel}</Text>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-    );
-  },
+export const Route = createRoute('/cards', {
+  validateParams: (params) => params,
+  component: CardsPage,
 });
+
+function CardsPage() {
+  const navigation = useNavigation();
+  const [cards, setCards] = useState<any[]>([]);
+
+  useEffect(() => {
+    cardService.getUserCards().then(setCards);
+  }, []);
+
+  const handleCardPress = (id: string) => {
+    // 이동하려는 상세 페이지 라우트 방식에 맞춰 호출
+    navigation.navigate('/card-detail' as any, { id });
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>카드 보관함</Text>
+      
+      <FlatList
+        data={cards}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            style={styles.cardItem} 
+            onPress={() => handleCardPress(item.id)}
+          >
+            <Text style={styles.elementBadge}>{item.element}</Text>
+            <Text style={styles.cardTitle}>{item.name}</Text>
+            <Text style={styles.enhanceText}>+{item.enhanceLevel}</Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F4F6', padding: 16 },

@@ -1,5 +1,6 @@
 {
   "name": "card-forge",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "apps/server"

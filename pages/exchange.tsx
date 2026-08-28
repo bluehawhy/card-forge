@@ -1,20 +1,40 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { createRoute } from '@apps-in-toss/granite';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 
-export default createRoute({
-  component: function ExchangePage() {
-    const [crystalBalance] = useState(6000); // 사용자 결정 잔액
+export const Route = createRoute('/exchange', {
+  validateParams: (params) => params,
+  component: ExchangePage,
+});
 
-    const handleExchange = () => {
-      Alert.alert('교환 확인', '3,000 결정을 1 토스 포인트로 교환하시겠습니까?', [
-        { text: '취소', style: 'cancel' },
-        { text: '교환하기', onPress: () => Alert.alert('성공', '1 토스 포인트로 교환되었습니다.') },
-      ]);
-    };
+function ExchangePage() {
+  const navigation = useNavigation();
+  const [crystalBalance, setCrystalBalance] = useState(6000); // 사용자 결정 잔액
 
-    return (
-      <View style={styles.container}>
+  const EXCHANGE_COST = 3000;
+
+  const handleExchange = () => {
+    if (crystalBalance < EXCHANGE_COST) {
+      Alert.alert('잔액 부족', '교환에 필요한 결정이 부족합니다.');
+      return;
+    }
+
+    Alert.alert('교환 확인', '3,000 결정을 1 토스 포인트로 교환하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      { 
+        text: '교환하기', 
+        onPress: () => {
+          // TODO: 교환 API 호출 처리
+          setCrystalBalance((prev) => prev - EXCHANGE_COST);
+          Alert.alert('성공', '1 토스 포인트로 교환되었습니다.');
+        } 
+      },
+    ]);
+  };
+
+  return (
+    <View style={styles.container}>
+      <View>
         <Text style={styles.title}>🪙 포인트 교환소</Text>
         
         <View style={styles.infoCard}>
@@ -22,14 +42,14 @@ export default createRoute({
           <Text style={styles.rateText}>3,000 강화의 결정 = 1 토스 포인트</Text>
           <Text style={styles.subText}>보유 결정: {crystalBalance.toLocaleString()} 개</Text>
         </View>
-
-        <TouchableOpacity style={styles.exchangeButton} onPress={handleExchange}>
-          <Text style={styles.buttonText}>1 토스 포인트로 교환</Text>
-        </TouchableOpacity>
       </View>
-    );
-  },
-});
+
+      <TouchableOpacity style={styles.exchangeButton} onPress={handleExchange}>
+        <Text style={styles.buttonText}>1 토스 포인트로 교환</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F4F6', padding: 16, justifyContent: 'space-between' },
