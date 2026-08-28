@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ImageBackground, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { createRoute, useNavigation } from '@granite-js/react-native';
 
-// 1. 타입을 컴포넌트 외부로 이동하고 오타 수정
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange' | '/about' | '/';
 
 export const Route = createRoute('/', {
@@ -20,137 +19,148 @@ function HomePage() {
     darkAshes: 0,
   };
 
-  // 2. 매개변수 타입을 AppRoutes로 일치시킴
   const handleNavigate = (path: AppRoutes) => {
-    navigation.navigate(path as any); // 라우트 파일 생성 전이라면 as any 추가
+    navigation.navigate(path as any);
   };
 
+  const FULL_BACKGROUND_URI =
+    'https://github.com/bluehawhy/card-forge/blob/main/assets/images/background/index.jpg?raw=true';
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} >
-      {/* ========================= 플레이어 메인 카드 ========================= /}
-      <View style={styles.playerCard}>
-      {/ 배경 장식 */}
-      <View style={styles.backgroundCircleLarge} />
-      <View style={styles.backgroundCircleSmall} />
+    // 1. 전체 화면을 감싸는 ImageBackground
+    <ImageBackground
+      source={{ uri: FULL_BACKGROUND_URI }}
+      style={styles.fullBackground}
+      resizeMode="cover"
+    >
+      {/* 2. 가독성을 위해 전체 화면에 살짝 어두운 딤 필터 적용 */}
+      <View style={styles.darkOverlay} />
 
-      {/* 왼쪽 플레이어 정보 */}
-      <View style={styles.playerInfo}>
-        <Text style={styles.gameTitle}>CARD FORGE</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* ========================= 플레이어 메인 카드 ========================= */}
+        <View style={styles.playerCard}>
+          {/* 배경 장식 원 */}
+          <View style={styles.backgroundCircleLarge} />
+          <View style={styles.backgroundCircleSmall} />
 
-        <Text style={styles.nickname}>
-          {user.nickname ?? '모험가'}
-        </Text>
+          {/* 왼쪽 플레이어 정보 */}
+          <View style={styles.playerInfo}>
+            <Text style={styles.gameTitle}>CARD FORGE</Text>
 
-        <Text style={styles.levelText}>
-          Lv. {user.level} · 카드 수집가
-        </Text>
+            <Text style={styles.nickname} numberOfLines={1}>
+              {user.nickname ?? '모험가'}
+            </Text>
 
-        {/* 재화 */}
-        <View style={styles.currencyContainer}>
-          <View style={styles.currencyItem}>
-            <Text style={styles.currencyIcon}>💎</Text>
+            <Text style={styles.levelText}>
+              Lv. {user.level} · 카드 수집가
+            </Text>
 
-            <View>
-              <Text style={styles.currencyLabel}>
-                보유 결정
-              </Text>
+            {/* 재화 */}
+            <View style={styles.currencyContainer}>
+              <View style={styles.currencyItem}>
+                <Text style={styles.currencyIcon}>💎</Text>
+                <View style={styles.currencyTextWrapper}>
+                  <Text style={styles.currencyLabel} numberOfLines={1}>
+                    보유 결정
+                  </Text>
+                  <Text style={styles.currencyValue} numberOfLines={1}>
+                    {user.crystals?.toLocaleString() ?? 0}
+                  </Text>
+                </View>
+              </View>
 
-              <Text style={styles.currencyValue}>
-                {user.crystals?.toLocaleString() ?? 0}
-              </Text>
+              <View style={styles.currencyItem}>
+                <Text style={styles.currencyIcon}>🔥</Text>
+                <View style={styles.currencyTextWrapper}>
+                  <Text style={styles.currencyLabel} numberOfLines={1}>
+                    검은 재
+                  </Text>
+                  <Text style={styles.currencyValue} numberOfLines={1}>
+                    {user.darkAshes?.toLocaleString() ?? 0}
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
 
-          <View style={styles.currencyItem}>
-            <Text style={styles.currencyIcon}>🔥</Text>
-
-            <View>
-              <Text style={styles.currencyLabel}>
-                검은 재
-              </Text>
-
-              <Text style={styles.currencyValue}>
-                {user.darkAshes?.toLocaleString() ?? 0}
+          {/* 오른쪽 캐릭터 */}
+          <View style={styles.characterContainer}>
+            <Image
+              source={{
+                uri: 'https://github.com/bluehawhy/card-forge/blob/main/assets/images/characters/rose.jpg?raw=true',
+              }}
+              style={styles.characterImage}
+              resizeMode="cover"
+            />
+            <View style={styles.starsOverlay}>
+              <Text style={styles.characterStars}>
+                ★ ★ ★ ★ ★
               </Text>
             </View>
           </View>
         </View>
-      </View>
 
-      {/* 오른쪽 캐릭터 */}
-      <View style={styles.characterContainer}>
-        <Image
-          source={{
-            uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIY-cdesJWZX-13vZWQ7bJspp4F1np4Eh9qzR19MeW2Q&s=10',
-          }}
-          style={styles.characterImage}
-          resizeMode="contain"
-        />
+        {/* ========================= 빠른 이동 ========================= */}
+        <Text style={styles.sectionTitle}>빠른 이동</Text>
 
-        <Text style={styles.characterStars}>
-          ★ ★ ★ ★ ★
-        </Text>
-      </View>
+        <View style={styles.grid}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => handleNavigate('/cards')}
+          >
+            <Text style={styles.menuIcon}>🎴</Text>
+            <Text style={styles.menuText}>보관함</Text>
+            <Text style={styles.menuDescription}>내 카드 보기</Text>
+          </TouchableOpacity>
 
-      {/* ========================= 빠른 이동 ========================= */}
-      <Text style={styles.sectionTitle}>
-        빠른 이동
-      </Text>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => handleNavigate('/forge')}
+          >
+            <Text style={styles.menuIcon}>⚒️</Text>
+            <Text style={styles.menuText}>강화소</Text>
+            <Text style={styles.menuDescription}>카드 강화</Text>
+          </TouchableOpacity>
 
-      <View style={styles.grid}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => handleNavigate('/cards')}
-        >
-          <Text style={styles.menuIcon}>🎴</Text>
-          <Text style={styles.menuText}>보관함</Text>
-          <Text style={styles.menuDescription}>
-            내 카드 보기
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => handleNavigate('/packs')}
+          >
+            <Text style={styles.menuIcon}>🎁</Text>
+            <Text style={styles.menuText}>카드팩</Text>
+            <Text style={styles.menuDescription}>새로운 카드</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => handleNavigate('/forge')}
-        >
-          <Text style={styles.menuIcon}>⚒️</Text>
-          <Text style={styles.menuText}>강화소</Text>
-          <Text style={styles.menuDescription}>
-            카드 강화
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => handleNavigate('/packs')}
-        >
-          <Text style={styles.menuIcon}>🎁</Text>
-          <Text style={styles.menuText}>카드팩</Text>
-          <Text style={styles.menuDescription}>
-            새로운 카드
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => handleNavigate('/exchange')}
-        >
-          <Text style={styles.menuIcon}>🪙</Text>
-          <Text style={styles.menuText}>교환소</Text>
-          <Text style={styles.menuDescription}>
-            아이템 교환
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView >
-
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => handleNavigate('/exchange')}
+          >
+            <Text style={styles.menuIcon}>🪙</Text>
+            <Text style={styles.menuText}>교환소</Text>
+            <Text style={styles.menuDescription}>아이템 교환</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  /* 전체 화면 배경 지정 */
+  fullBackground: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+
+  /* 앱 내 UI 가독성을 확보해 주는 어두운 필터 (투명도 조절 가능) */
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(240, 242, 245, 0.65)', // 배경 이미지를 보면서도 흰색 카드들이 떠 보이게 연한 톤 처리
+  },
+
   container: {
     flex: 1,
-    backgroundColor: '#F2F4F6',
   },
 
   content: {
@@ -163,12 +173,11 @@ const styles = StyleSheet.create({
   ========================= */
 
   playerCard: {
-    height: 230,
-    backgroundColor: '#252B42',
+    height: 220,
+    backgroundColor: 'rgba(37, 43, 66, 0.95)', // 전체 배경 위에서 잘 보이도록 불투명도 부여
     borderRadius: 24,
     marginBottom: 28,
     overflow: 'hidden',
-    padding: 22,
     position: 'relative',
     flexDirection: 'row',
   },
@@ -179,7 +188,7 @@ const styles = StyleSheet.create({
     height: 260,
     borderRadius: 130,
     backgroundColor: '#343D61',
-    right: -100,
+    left: -50,
     top: -80,
   },
 
@@ -189,12 +198,14 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 75,
     backgroundColor: '#2F3654',
-    right: 50,
-    bottom: -100,
+    left: 80,
+    bottom: -80,
   },
 
   playerInfo: {
     flex: 1,
+    padding: 20,
+    justifyContent: 'center',
     zIndex: 2,
   },
 
@@ -203,20 +214,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#AEB8D8',
     letterSpacing: 2,
-    marginBottom: 8,
+    marginBottom: 6,
   },
 
   nickname: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   levelText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#B7C0DD',
-    marginBottom: 20,
+    marginBottom: 14,
   },
 
   /* =========================
@@ -224,21 +235,25 @@ const styles = StyleSheet.create({
   ========================= */
 
   currencyContainer: {
-    gap: 8,
+    gap: 6,
   },
 
   currencyItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 10,
   },
 
   currencyIcon: {
-    fontSize: 18,
-    marginRight: 8,
+    fontSize: 16,
+    marginRight: 6,
+  },
+
+  currencyTextWrapper: {
+    flex: 1,
   },
 
   currencyLabel: {
@@ -247,7 +262,7 @@ const styles = StyleSheet.create({
   },
 
   currencyValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -257,13 +272,9 @@ const styles = StyleSheet.create({
   ========================= */
 
   characterContainer: {
-    position: 'absolute',
-    right: -5,
-    bottom: 0,
-    width: '52%',
+    width: '45%',
     height: '100%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    position: 'relative',
     zIndex: 1,
   },
 
@@ -272,12 +283,20 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  characterStars: {
+  starsOverlay: {
     position: 'absolute',
-    bottom: 10,
-    fontSize: 10,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+
+  characterStars: {
+    fontSize: 11,
     color: '#FFD56A',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
 
   /* =========================
@@ -299,7 +318,7 @@ const styles = StyleSheet.create({
 
   menuButton: {
     width: '48%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)', // 배경 이미지에 맞춘 반투명 흰색 카드
     paddingVertical: 22,
     paddingHorizontal: 16,
     borderRadius: 18,
