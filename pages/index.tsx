@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, ImageBackground, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { createRoute, useNavigation } from '@granite-js/react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { Layers, Hammer, Gift, Coins } from 'lucide-react-native';
 
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange' | '/about' | '/';
 
@@ -93,13 +93,9 @@ function HomePage() {
               style={styles.characterImage}
               resizeMode="cover"
             />
-            {/* 👈 캐릭터 왼쪽 경계를 자연스럽게 어둡게 덮어주는 그라데이션 */}
-            <LinearGradient
-              colors={['#252B42', 'transparent']} // 왼쪽: 카드 배경색, 오른쪽: 투명
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0.6, y: 0 }}
-              style={styles.leftFadeOverlay}
-            />
+
+            {/* 👈 BVLinearGradient 대신 사용할 부드러운 오버레이 띠 */}
+            <View style={styles.leftFadeOverlay} />
 
             {/* 하단 별 오버레이 */}
             <View style={styles.starsOverlay}>
@@ -114,11 +110,11 @@ function HomePage() {
         <Text style={styles.sectionTitle}>빠른 이동</Text>
 
         <View style={styles.grid}>
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={() => handleNavigate('/cards')}
-          >
-            <Text style={styles.menuIcon}>🎴</Text>
+          <TouchableOpacity style={styles.menuButton} onPress={() => handleNavigate('/cards')}>
+            {/* 아이콘을 감싸는 뱃지 라운드 */}
+            <View style={[styles.iconBadge, { backgroundColor: '#E8F3FF' }]}>
+              <Text style={styles.menuIcon}>🎴</Text>
+            </View>
             <Text style={styles.menuText}>보관함</Text>
             <Text style={styles.menuDescription}>내 카드 보기</Text>
           </TouchableOpacity>
@@ -288,13 +284,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
-  /* 캐릭터 왼쪽 경계 그라데이션 오버레이 */
+  /* LinearGradient 대체용 경계 레이어 */
   leftFadeOverlay: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: '50%', // 캐릭터 이미지 좌측 절반 부분에 그라데이션 적용
+    width: 20, // 캐릭터 좌측 경계에만 얇게 배치
+    backgroundColor: 'rgba(37, 43, 66, 0.5)', // 카드 배경색 계열의 반투명 톤
     zIndex: 2,
   },
 
@@ -335,29 +332,46 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
-
+  /* Style 수정 */
   menuButton: {
     width: '48%',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)', // 배경 이미지에 맞춘 반투명 흰색 카드
-    paddingVertical: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.75)', // 반투명 처리
+    paddingVertical: 20,
     paddingHorizontal: 16,
-    borderRadius: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)', // 은은한 흰색 테두리
+
+    // 입체감을 위한 미세한 그림자
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
 
-  menuIcon: {
-    fontSize: 30,
+  iconBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 12,
   },
 
+  menuIcon: {
+    fontSize: 22,
+  },
+
   menuText: {
-    fontSize: 17,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#191F28',
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   menuDescription: {
     fontSize: 12,
-    color: '#8B95A1',
+    color: '#6B7684',
   },
 });
