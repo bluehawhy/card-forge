@@ -1,6 +1,12 @@
+import { X509Certificate, createPrivateKey } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { Agent, request } from 'node:https';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  type OnApplicationShutdown,
+  type OnModuleInit,
+} from '@nestjs/common';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
 
 const MAX_RESPONSE_BYTES = 1024 * 1024;
@@ -16,6 +22,13 @@ export interface TossMtlsRequest {
 
 export interface TossMtlsHttpClient {
   requestJson<T>(request: TossMtlsRequest): Promise<T>;
+  checkReadiness(): Promise<TossMtlsReadiness>;
+  close(): void;
+}
+
+export interface TossMtlsReadiness {
+  ready: true;
+  expiresAt: string;
 }
 
 export class TossMtlsConfigurationError extends Error {
@@ -36,11 +49,14 @@ export class TossMtlsRequestError extends Error {
 }
 
 @Injectable()
-export class NodeTossMtlsHttpClient implements TossMtlsHttpClient {
+export class NodeTossMtlsHttpClient
+  implements TossMtlsHttpClient, OnModuleInit, OnApplicationShutdown
+{
   private readonly baseOrigin: string;
   private readonly timeoutMs: number;
   private readonly maxRetries: number;
-  private agentPromise?: Promise<Agent>;
+  private credentialPromise?: Promise<ValidatedCredential>;
+  private agent?: Agent;
 
   constructor(@Inject(SERVER_CONFIG) private readonly config: ServerConfig) {
     this.baseOrigin = new URL(
@@ -70,8 +86,28 @@ export class NodeTossMtlsHttpClient implements TossMtlsHttpClient {
     }
   }
 
+  async checkReadiness(): Promise<TossMtlsReadiness> {
+    const credential = await this.getCredential();
+    return {
+      ready: true,
+      expiresAt: credential.expiresAt.toISOString(),
+    };
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.checkReadiness();
+  }
+
+  close(): void {
+    this.agent?.destroy();
+  }
+
+  onApplicationShutdown(): void {
+    this.close();
+  }
+
   private async requestOnce<T>(url: URL, input: TossMtlsRequest): Promise<T> {
-    const agent = await this.getAgent();
+    const { agent } = await this.getCredential();
     const payload =
       input.body === undefined ? undefined : JSON.stringify(input.body);
 
@@ -139,12 +175,18 @@ export class NodeTossMtlsHttpClient implements TossMtlsHttpClient {
     });
   }
 
-  private getAgent(): Promise<Agent> {
-    this.agentPromise ??= this.createAgent();
-    return this.agentPromise;
+  private async getCredential(): Promise<ValidatedCredential> {
+    this.credentialPromise ??= this.createCredential();
+    const credential = await this.credentialPromise;
+    if (new Date() >= credential.expiresAt) {
+      throw new TossMtlsConfigurationError(
+        'Toss mTLS certificate is not currently valid.',
+      );
+    }
+    return credential;
   }
 
-  private async createAgent(): Promise<Agent> {
+  private async createCredential(): Promise<ValidatedCredential> {
     try {
       const [cert, key, ca] = await Promise.all([
         readRequiredFile(this.config.tossMtlsCertPath),
@@ -153,7 +195,8 @@ export class NodeTossMtlsHttpClient implements TossMtlsHttpClient {
           ? readRequiredFile(this.config.tossMtlsCaPath)
           : Promise.resolve(undefined),
       ]);
-      return new Agent({
+      const { expiresAt } = validateClientCredentials(cert, key);
+      const agent = new Agent({
         cert,
         key,
         ...(ca ? { ca } : {}),
@@ -161,12 +204,47 @@ export class NodeTossMtlsHttpClient implements TossMtlsHttpClient {
         maxSockets: 20,
         rejectUnauthorized: true,
       });
+      this.agent = agent;
+      return { agent, expiresAt };
     } catch {
       throw new TossMtlsConfigurationError(
-        'Toss mTLS certificate files could not be loaded.',
+        'Toss mTLS credentials are missing, invalid, expired, or mismatched.',
       );
     }
   }
+}
+
+interface ValidatedCredential {
+  agent: Agent;
+  expiresAt: Date;
+}
+
+export function validateClientCredentials(
+  cert: Buffer,
+  key: Buffer,
+  now = new Date(),
+): { expiresAt: Date } {
+  const certificate = new X509Certificate(cert);
+  const privateKey = createPrivateKey(key);
+  const validFrom = new Date(certificate.validFrom);
+  const expiresAt = new Date(certificate.validTo);
+
+  if (
+    Number.isNaN(validFrom.getTime()) ||
+    Number.isNaN(expiresAt.getTime()) ||
+    now < validFrom ||
+    now >= expiresAt
+  ) {
+    throw new TossMtlsConfigurationError(
+      'Toss mTLS certificate is not currently valid.',
+    );
+  }
+  if (!certificate.checkPrivateKey(privateKey)) {
+    throw new TossMtlsConfigurationError(
+      'Toss mTLS certificate and private key do not match.',
+    );
+  }
+  return { expiresAt };
 }
 
 async function readRequiredFile(path: string): Promise<Buffer> {

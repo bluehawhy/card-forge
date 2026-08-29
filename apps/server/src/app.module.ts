@@ -13,6 +13,7 @@ import { EnhancementService } from './enhancement/enhancement.service';
 import { ExchangeController } from './exchange/exchange.controller';
 import { ExchangeService } from './exchange/exchange.service';
 import { FraudDetectionService } from './fraud-detection/fraud-detection.service';
+import { HealthController } from './health/health.controller';
 import { MembershipController } from './membership/membership.controller';
 import { MembershipService } from './membership/membership.service';
 import {
@@ -40,6 +41,7 @@ import {
     PacksController,
     EnhancementController,
     ExchangeController,
+    HealthController,
   ],
   providers: [
     {
