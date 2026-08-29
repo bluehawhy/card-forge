@@ -1,90 +1,40 @@
-import { readFile } from 'node:fs/promises';
-import { request } from 'node:https';
-import { Injectable } from '@nestjs/common';
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { SERVER_CONFIG, type ServerConfig } from '../config';
+import {
+  TOSS_MTLS_HTTP_CLIENT,
+  type TossMtlsHttpClient,
+} from '../toss/toss-mtls-client';
 import type { TossGameUserVerifier } from './membership.types';
+
+interface TossVerificationResponse {
+  resultType: string;
+  success?: string | boolean;
+}
 
 @Injectable()
 export class HttpTossGameUserVerifier implements TossGameUserVerifier {
-  constructor(@Inject(SERVER_CONFIG) private readonly config: ServerConfig) {}
+  constructor(
+    @Inject(SERVER_CONFIG) private readonly config: ServerConfig,
+    @Inject(TOSS_MTLS_HTTP_CLIENT)
+    private readonly httpClient: TossMtlsHttpClient,
+  ) {}
 
   async verify(tossGameUserHash: string): Promise<{ stableUserKey: string }> {
-    const [cert, key, ca] = await Promise.all([
-      readFile(this.config.tossMtlsCertPath),
-      readFile(this.config.tossMtlsKeyPath),
-      readFile(this.config.tossMtlsCaPath),
-    ]);
-    const response = await postJson(
-      this.config.tossVerifyUrl,
-      { tossGameUserHash },
-      { cert, key, ca },
-    );
-    if (!isVerificationResponse(response))
-      throw new Error('Invalid Toss verification response.');
-    return { stableUserKey: response.userKey };
-  }
-}
-
-function postJson(
-  url: string,
-  body: unknown,
-  tls: { cert: Buffer; key: Buffer; ca: Buffer },
-): Promise<unknown> {
-  const payload = JSON.stringify(body);
-  return new Promise((resolve, reject) => {
-    const req = request(
-      url,
-      {
+    const response =
+      await this.httpClient.requestJson<TossVerificationResponse>({
         method: 'POST',
-        cert: tls.cert,
-        key: tls.key,
-        ca: tls.ca,
-        rejectUnauthorized: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload),
-        },
-        timeout: 5_000,
-      },
-      (res) => {
-        const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('end', () => {
-          if (
-            !res.statusCode ||
-            res.statusCode < 200 ||
-            res.statusCode >= 300
-          ) {
-            reject(
-              new Error(`Toss verification failed (${res.statusCode ?? 0}).`),
-            );
-            return;
-          }
-          try {
-            resolve(
-              JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown,
-            );
-          } catch (error) {
-            reject(error);
-          }
-        });
-      },
-    );
-    req.on('timeout', () =>
-      req.destroy(new Error('Toss verification timed out.')),
-    );
-    req.on('error', reject);
-    req.end(payload);
-  });
-}
+        url: this.config.tossVerifyUrl,
+        headers: { 'x-anon-key': tossGameUserHash },
+      });
+    if (
+      response.resultType !== 'SUCCESS' ||
+      (response.success !== true && response.success !== 'true')
+    ) {
+      throw new Error('Toss user hash verification failed.');
+    }
 
-function isVerificationResponse(value: unknown): value is { userKey: string } {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'userKey' in value &&
-    typeof value.userKey === 'string' &&
-    value.userKey.trim().length > 0
-  );
+    // 검증된 hash는 이 앱 안에서만 안정적인 식별자다. 호출자는 즉시 HMAC
+    // digest로 변환하며 원문을 저장하거나 로그에 남기지 않는다.
+    return { stableUserKey: tossGameUserHash };
+  }
 }
