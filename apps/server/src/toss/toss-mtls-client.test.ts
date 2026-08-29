@@ -28,6 +28,8 @@ describe('NodeTossMtlsHttpClient', () => {
     const client = new NodeTossMtlsHttpClient(config);
     await expect(
       client.requestJson({ method: 'POST', url: config.tossVerifyUrl }),
-    ).rejects.toThrow('Toss mTLS certificate files could not be loaded.');
+    ).rejects.toThrow(
+      'Toss mTLS credentials are missing, invalid, expired, or mismatched.',
+    );
   });
 });

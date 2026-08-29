@@ -7,7 +7,11 @@ import { join } from 'node:path';
 import type { TLSSocket } from 'node:tls';
 import type { ServerConfig } from '../config';
 import { HttpTossGameUserVerifier } from '../membership/toss-game-user.verifier';
-import { NodeTossMtlsHttpClient } from './toss-mtls-client';
+import {
+  NodeTossMtlsHttpClient,
+  TossMtlsConfigurationError,
+  validateClientCredentials,
+} from './toss-mtls-client';
 
 jest.setTimeout(30_000);
 
@@ -83,10 +87,43 @@ describe('Toss mTLS integration', () => {
     const client = new NodeTossMtlsHttpClient(config);
     const verifier = new HttpTossGameUserVerifier(config, client);
 
+    await expect(client.checkReadiness()).resolves.toEqual({
+      ready: true,
+      expiresAt: expect.any(String),
+    });
     await expect(
       verifier.verify('verified-game-user-hash-value'),
     ).resolves.toEqual({ stableUserKey: 'verified-game-user-hash-value' });
     expect(receivedBodies).toEqual(['']);
+    client.close();
+  });
+
+  it('인증서와 개인키가 서로 다르면 준비 상태를 거절한다', async () => {
+    const config: ServerConfig = {
+      port: 3000,
+      databaseUrl: 'postgres://unused',
+      sessionPepper: 'a-secure-test-pepper-with-more-than-32-characters',
+      sessionTtlSeconds: 3600,
+      tossApiBaseUrl: 'https://apps-in-toss-api.toss.im',
+      tossVerifyUrl:
+        'https://apps-in-toss-api.toss.im/api-partner/v1/apps-in-toss/users/anon-key/verify',
+      tossMtlsCertPath: join(fixtureDirectory, 'client.crt'),
+      tossMtlsKeyPath: join(fixtureDirectory, 'server.key'),
+    };
+    const client = new NodeTossMtlsHttpClient(config);
+
+    await expect(client.checkReadiness()).rejects.toBeInstanceOf(
+      TossMtlsConfigurationError,
+    );
+  });
+
+  it('유효기간이 지난 인증서는 거절한다', async () => {
+    const cert = await readFile(join(fixtureDirectory, 'client.crt'));
+    const key = await readFile(join(fixtureDirectory, 'client.key'));
+
+    expect(() =>
+      validateClientCredentials(cert, key, new Date('2100-01-01T00:00:00Z')),
+    ).toThrow(TossMtlsConfigurationError);
   });
 });
 
