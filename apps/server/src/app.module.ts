@@ -27,6 +27,11 @@ import {
 } from './packs/pack-reward.policy';
 import { PacksController } from './packs/packs.controller';
 import { PacksService } from './packs/packs.service';
+import {
+  NodeTossMtlsHttpClient,
+  TOSS_MTLS_HTTP_CLIENT,
+  type TossMtlsHttpClient,
+} from './toss/toss-mtls-client';
 
 @Module({
   controllers: [
@@ -48,6 +53,11 @@ import { PacksService } from './packs/packs.service';
     ExchangeService,
     FraudDetectionService,
     {
+      provide: TOSS_MTLS_HTTP_CLIENT,
+      inject: [SERVER_CONFIG],
+      useFactory: (config: ServerConfig) => new NodeTossMtlsHttpClient(config),
+    },
+    {
       provide: AD_REWARD_VERIFIER,
       useValue: UNCONFIGURED_AD_REWARD_VERIFIER,
     },
@@ -62,9 +72,9 @@ import { PacksService } from './packs/packs.service';
     },
     {
       provide: TOSS_GAME_USER_VERIFIER,
-      inject: [SERVER_CONFIG],
-      useFactory: (config: ServerConfig) =>
-        new HttpTossGameUserVerifier(config),
+      inject: [SERVER_CONFIG, TOSS_MTLS_HTTP_CLIENT],
+      useFactory: (config: ServerConfig, httpClient: TossMtlsHttpClient) =>
+        new HttpTossGameUserVerifier(config, httpClient),
     },
     {
       provide: GAME_REPOSITORY,
