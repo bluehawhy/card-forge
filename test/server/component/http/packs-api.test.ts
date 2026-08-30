@@ -4,15 +4,21 @@ import { Test } from '@nestjs/testing';
 import {
   AD_REWARD_VERIFIER,
   type AdRewardVerifier,
-} from '../ads/ad-reward.verifier';
-import { GAME_REPOSITORY, type GameRepository } from '../cards/gameplay.types';
-import { SERVER_CONFIG, type ServerConfig } from '../config';
+} from '../../../../apps/server/src/ads/ad-reward.verifier';
+import {
+  GAME_REPOSITORY,
+  type GameRepository,
+} from '../../../../apps/server/src/cards/gameplay.types';
+import {
+  SERVER_CONFIG,
+  type ServerConfig,
+} from '../../../../apps/server/src/config';
 import {
   PACK_REWARD_POLICY,
   type PackRewardPolicy,
-} from './pack-reward.policy';
-import { PacksController } from './packs.controller';
-import { PacksService } from './packs.service';
+} from '../../../../apps/server/src/packs/pack-reward.policy';
+import { PacksController } from '../../../../apps/server/src/packs/packs.controller';
+import { PacksService } from '../../../../apps/server/src/packs/packs.service';
 
 const config: ServerConfig = {
   port: 3000,

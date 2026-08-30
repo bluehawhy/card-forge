@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { createRoute, useNavigation } from '@granite-js/react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { packService } from '../src/services/packService';
+import { rewardedAdService } from '../src/services/rewardedAdService';
 
 export const Route = createRoute('/packs', {
   validateParams: (params) => params,
@@ -11,22 +19,43 @@ export const Route = createRoute('/packs', {
 function PacksPage() {
   const navigation = useNavigation();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
+  const [isAdReady, setIsAdReady] = useState(false);
+
+  const loadAd = useCallback(async () => {
+    setIsAdReady(false);
+    try {
+      await rewardedAdService.load();
+      setIsAdReady(true);
+    } catch {
+      setIsAdReady(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAd();
+  }, [loadAd]);
 
   const handleOpenPack = async (packType: string) => {
     setLoadingPack(packType);
     try {
+      await rewardedAdService.show();
       const rewardCards = await packService.openPack(packType);
-      Alert.alert('카드 획득!', `${rewardCards.length}장의 카드를 획득했습니다.`, [
-        {
-          text: '보관함 확인',
-          onPress: () => navigation.navigate('/cards' as any),
-        },
-        { text: '확인', style: 'default' },
-      ]);
+      Alert.alert(
+        '카드 획득!',
+        `${rewardCards.length}장의 카드를 획득했습니다.`,
+        [
+          {
+            text: '보관함 확인',
+            onPress: () => navigation.navigate('/cards' as any),
+          },
+          { text: '확인', style: 'default' },
+        ],
+      );
     } catch (e) {
       Alert.alert('오류', '카드팩을 개봉하지 못했습니다.');
     } finally {
       setLoadingPack(null);
+      void loadAd();
     }
   };
 
@@ -35,10 +64,10 @@ function PacksPage() {
       <Text style={styles.title}>🎁 카드팩 상점</Text>
 
       <View style={styles.packList}>
-        <TouchableOpacity 
-          style={[styles.packCard, loadingPack === 'NORMAL' && styles.disabled]} 
+        <TouchableOpacity
+          style={[styles.packCard, loadingPack === 'NORMAL' && styles.disabled]}
           onPress={() => handleOpenPack('NORMAL')}
-          disabled={loadingPack !== null}
+          disabled={loadingPack !== null || !isAdReady}
         >
           <View style={styles.packInfo}>
             <Text style={styles.packName}>일반 원소 팩</Text>
@@ -47,10 +76,10 @@ function PacksPage() {
           {loadingPack === 'NORMAL' && <ActivityIndicator color="#3182F6" />}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.packCard, loadingPack === 'RARE' && styles.disabled]} 
+        <TouchableOpacity
+          style={[styles.packCard, loadingPack === 'RARE' && styles.disabled]}
           onPress={() => handleOpenPack('RARE')}
-          disabled={loadingPack !== null}
+          disabled={loadingPack !== null || !isAdReady}
         >
           <View style={styles.packInfo}>
             <Text style={styles.packName}>고급 원소 팩</Text>
@@ -65,15 +94,20 @@ function PacksPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F4F6', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#191F28', marginBottom: 16 },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#191F28',
+    marginBottom: 16,
+  },
   packList: { gap: 12 },
-  packCard: { 
-    backgroundColor: '#FFFFFF', 
-    padding: 20, 
-    borderRadius: 14, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center' 
+  packCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   disabled: { opacity: 0.6 },
   packInfo: { flex: 1 },

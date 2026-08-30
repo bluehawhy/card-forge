@@ -1,4 +1,4 @@
-import { loadServerConfig } from './config';
+import { loadServerConfig } from '../../../apps/server/src/config';
 
 const requiredEnvironment: NodeJS.ProcessEnv = {
   DATABASE_URL: 'postgres://localhost/card_forge',

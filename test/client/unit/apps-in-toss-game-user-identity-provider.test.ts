@@ -1,5 +1,5 @@
 import { getUserKeyForGame } from '@apps-in-toss/framework';
-import { createAppsInTossGameUserIdentityProvider } from './appsInTossGameUserIdentityProvider';
+import { createAppsInTossGameUserIdentityProvider } from '../../../src/features/user/infrastructure/appsInTossGameUserIdentityProvider';
 
 jest.mock('@apps-in-toss/framework', () => ({
   getUserKeyForGame: jest.fn(),

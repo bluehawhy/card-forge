@@ -10,6 +10,21 @@
    운영체제 기본 CA 대신 별도 CA가 필요한 환경에서만 `TOSS_MTLS_CA_PATH`를 설정한다.
 4. 루트에서 `npm run server:build`, `npm run server:test`로 검증한다.
 
+## PostgreSQL 마이그레이션과 실제 통합 테스트
+
+빌드 후 `DATABASE_URL`을 설정하고 `npm run db:migrate --workspace @card-forge/server`를 실행한다. 적용된 SQL 파일과 SHA-256 checksum은 `schema_migrations`에 기록된다. 이미 적용된 파일이 수정되면 서버가 재적용하지 않고 오류로 중단한다.
+
+실제 PostgreSQL 통합 테스트는 일반 Jest 테스트와 분리되어 있다. 테스트 전용 데이터베이스를 만들고 이름을 반드시 `_test`로 끝낸 뒤 다음 명령을 실행한다.
+
+```powershell
+$env:TEST_DATABASE_URL='postgres://card_forge:password@localhost:5432/card_forge_test'
+npm run server:test:postgres
+```
+
+이 명령은 지정한 테스트 DB의 `public` 스키마를 초기화한다. 운영·개발 DB URL에는 실행할 수 없도록 데이터베이스 이름을 검사한다. 세 마이그레이션 재현, 36개 카드 템플릿, 회원·지갑·세션 원자적 생성, 오류 롤백, 동시 회원 초기화, 카드팩 멱등성을 실제 PostgreSQL에서 검증한다.
+
+모든 테스트 파일과 테스트 분류 기준은 저장소 루트의 `test/`에 있다. `test/server/component`는 외부 저장소를 모킹하므로 실제 통합 성공으로 계산하지 않는다. 자세한 실행 방법은 `test/README.md`를 따른다.
+
 서버는 hash·access token 원문을 DB에 저장하거나 로그에 남기지 않는다. Toss 검증 결과는 HMAC digest로, 세션 token은 SHA-256 digest로만 저장한다.
 
 ## Toss mTLS 환경변수

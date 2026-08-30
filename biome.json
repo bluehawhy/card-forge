@@ -31,6 +31,15 @@
     }
   },
   "files": {
-    "include": ["src/**/*", "pages/**/*"]
+    "include": [
+      "src/**/*",
+      "pages/**/*",
+      "apps/server/src/**/*",
+      "test/**/*",
+      "jest.config.js",
+      "apps/server/jest*.js",
+      "package.json",
+      "apps/server/package.json"
+    ]
   }
 }

@@ -1,5 +1,8 @@
-import type { CurrentUserProfile, UserSession } from '../domain/user';
-import { createHttpUserRepository } from './httpUserRepository';
+import type {
+  CurrentUserProfile,
+  UserSession,
+} from '../../../src/features/user/domain/user';
+import { createHttpUserRepository } from '../../../src/features/user/infrastructure/httpUserRepository';
 
 const currentUser: CurrentUserProfile = {
   userId: 'user-001',

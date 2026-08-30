@@ -7,7 +7,7 @@ import {
   calculateCardSaleValue,
   createClimateBag,
   successRateForTargetLevel,
-} from './game-rules-v2';
+} from '../../../apps/server/src/cards/game-rules-v2';
 
 describe('card-forge-rules-v2', () => {
   it('v2 보관칸·광고팩·포인트 환율을 고정한다', () => {

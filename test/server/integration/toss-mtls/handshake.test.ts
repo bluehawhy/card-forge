@@ -5,13 +5,13 @@ import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TLSSocket } from 'node:tls';
-import type { ServerConfig } from '../config';
-import { HttpTossGameUserVerifier } from '../membership/toss-game-user.verifier';
+import type { ServerConfig } from '../../../../apps/server/src/config';
+import { HttpTossGameUserVerifier } from '../../../../apps/server/src/membership/toss-game-user.verifier';
 import {
   NodeTossMtlsHttpClient,
   TossMtlsConfigurationError,
   validateClientCredentials,
-} from './toss-mtls-client';
+} from '../../../../apps/server/src/toss/toss-mtls-client';
 
 jest.setTimeout(30_000);
 

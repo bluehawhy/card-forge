@@ -1,10 +1,10 @@
 import type {
   CurrentUserProfile,
   UserSession,
-} from '../features/user/domain/user';
-import type { GameUserIdentityProvider } from '../features/user/ports/gameUserIdentityProvider';
-import type { UserRepository } from '../features/user/ports/userRepository';
-import { createUserService } from './userService';
+} from '../../../src/features/user/domain/user';
+import type { GameUserIdentityProvider } from '../../../src/features/user/ports/gameUserIdentityProvider';
+import type { UserRepository } from '../../../src/features/user/ports/userRepository';
+import { createUserService } from '../../../src/services/userService';
 
 const initialUser: CurrentUserProfile = {
   userId: 'user-001',
