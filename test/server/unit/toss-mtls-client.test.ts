@@ -1,8 +1,8 @@
-import type { ServerConfig } from '../config';
+import type { ServerConfig } from '../../../apps/server/src/config';
 import {
   NodeTossMtlsHttpClient,
   TossMtlsConfigurationError,
-} from './toss-mtls-client';
+} from '../../../apps/server/src/toss/toss-mtls-client';
 
 const config: ServerConfig = {
   port: 3000,

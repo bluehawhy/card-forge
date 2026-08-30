@@ -1,11 +1,11 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import type { ServerConfig } from '../config';
-import { MembershipService } from './membership.service';
+import type { ServerConfig } from '../../../apps/server/src/config';
+import { MembershipService } from '../../../apps/server/src/membership/membership.service';
 import type {
   TossGameUserVerifier,
   UserProfile,
   UserRepository,
-} from './membership.types';
+} from '../../../apps/server/src/membership/membership.types';
 
 const config: ServerConfig = {
   port: 3000,

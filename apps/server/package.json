@@ -4,8 +4,14 @@
   "version": "0.1.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "db:migrate": "node dist/database/migrate.js",
     "start": "node dist/main.js",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:component": "jest --config jest.component.config.js --runInBand",
+    "test:mtls": "jest --config jest.integration.config.js --runInBand --testPathPattern=toss-mtls",
+    "test:postgres": "jest --config jest.integration.config.js --runInBand --testPathPattern=postgres",
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
+    "test:all": "npm test && npm run test:component && npm run test:integration"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",

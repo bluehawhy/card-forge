@@ -3,14 +3,17 @@ import {
   ConflictException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import type { AdRewardVerifier } from '../ads/ad-reward.verifier';
-import type { ServerConfig } from '../config';
-import { EnhancementService } from '../enhancement/enhancement.service';
-import { ExchangeService } from '../exchange/exchange.service';
-import { FraudDetectionService } from '../fraud-detection/fraud-detection.service';
-import { UNCONFIGURED_PACK_REWARD_POLICY } from '../packs/pack-reward.policy';
-import { PacksService } from '../packs/packs.service';
-import type { GameRepository, OwnedCard } from './gameplay.types';
+import type { AdRewardVerifier } from '../../../apps/server/src/ads/ad-reward.verifier';
+import type {
+  GameRepository,
+  OwnedCard,
+} from '../../../apps/server/src/cards/gameplay.types';
+import type { ServerConfig } from '../../../apps/server/src/config';
+import { EnhancementService } from '../../../apps/server/src/enhancement/enhancement.service';
+import { ExchangeService } from '../../../apps/server/src/exchange/exchange.service';
+import { FraudDetectionService } from '../../../apps/server/src/fraud-detection/fraud-detection.service';
+import { UNCONFIGURED_PACK_REWARD_POLICY } from '../../../apps/server/src/packs/pack-reward.policy';
+import { PacksService } from '../../../apps/server/src/packs/packs.service';
 
 const config: ServerConfig = {
   port: 3000,

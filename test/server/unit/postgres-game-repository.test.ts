@@ -1,7 +1,7 @@
 import { ConflictException } from '@nestjs/common';
 import type { PoolClient } from 'pg';
-import type { ServerConfig } from '../config';
-import { PostgresGameRepository } from './postgres-game.repository';
+import { PostgresGameRepository } from '../../../apps/server/src/cards/postgres-game.repository';
+import type { ServerConfig } from '../../../apps/server/src/config';
 
 const config: ServerConfig = {
   port: 3000,

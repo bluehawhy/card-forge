@@ -1,6 +1,6 @@
 import { ServiceUnavailableException } from '@nestjs/common';
-import type { TossMtlsHttpClient } from '../toss/toss-mtls-client';
-import { HealthController } from './health.controller';
+import { HealthController } from '../../../apps/server/src/health/health.controller';
+import type { TossMtlsHttpClient } from '../../../apps/server/src/toss/toss-mtls-client';
 
 describe('HealthController', () => {
   const client: jest.Mocked<TossMtlsHttpClient> = {

@@ -2,18 +2,21 @@
   "name": "card-forge",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/server"
-  ],
+  "workspaces": ["apps/server"],
   "scripts": {
     "dev": "granite dev",
-    "build": "ait build && ait build && ait build",
+    "build": "node scripts/patch-granite-windows-path.cjs && node ./node_modules/@apps-in-toss/framework/bin/ait.js build",
     "test": "jest --passWithNoTests",
+    "test:client": "jest --runInBand",
     "typecheck": "tsc --noEmit",
     "lint": "biome check --write",
     "deploy": "ait deploy",
     "server:build": "npm run build --workspace @card-forge/server",
-    "server:test": "npm test --workspace @card-forge/server"
+    "server:test": "npm test --workspace @card-forge/server",
+    "server:test:component": "npm run test:component --workspace @card-forge/server",
+    "server:test:mtls": "npm run test:mtls --workspace @card-forge/server",
+    "server:test:postgres": "npm run test:postgres --workspace @card-forge/server",
+    "server:test:all": "npm run test:all --workspace @card-forge/server"
   },
   "dependencies": {
     "@apps-in-toss/framework": "^2.10.10",

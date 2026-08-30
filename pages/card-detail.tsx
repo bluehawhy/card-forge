@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { createRoute, useNavigation, useRoute } from '@granite-js/react-native';
+import { createRoute, useNavigation } from '@granite-js/react-native';
 import { cardService } from '../src/services/cardService';
 
 export const Route = createRoute('/card-detail', {
@@ -10,10 +10,7 @@ export const Route = createRoute('/card-detail', {
 
 function CardDetailPage() {
   const navigation = useNavigation();
-  const route = useRoute<any>();
-
-  // 전달받은 파라미터에서 cardId 추출
-  const cardId = route?.params?.id;
+  const { id: cardId } = Route.useParams() as { id?: string };
   const [card, setCard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
