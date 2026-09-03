@@ -22,12 +22,10 @@ import {
 } from './membership/membership.types';
 import { PostgresUserRepository } from './membership/postgres-user.repository';
 import { HttpTossGameUserVerifier } from './membership/toss-game-user.verifier';
-import {
-  PACK_REWARD_POLICY,
-  UNCONFIGURED_PACK_REWARD_POLICY,
-} from './packs/pack-reward.policy';
+import { PACK_REWARD_POLICY } from './packs/pack-reward.policy';
 import { PacksController } from './packs/packs.controller';
 import { PacksService } from './packs/packs.service';
+import { V2PackRewardPolicy } from './packs/v2-pack-reward.policy';
 import {
   NodeTossMtlsHttpClient,
   TOSS_MTLS_HTTP_CLIENT,
@@ -51,6 +49,7 @@ import {
     MembershipService,
     CardsService,
     PacksService,
+    V2PackRewardPolicy,
     EnhancementService,
     ExchangeService,
     FraudDetectionService,
@@ -65,7 +64,7 @@ import {
     },
     {
       provide: PACK_REWARD_POLICY,
-      useValue: UNCONFIGURED_PACK_REWARD_POLICY,
+      useExisting: V2PackRewardPolicy,
     },
     {
       provide: USER_REPOSITORY,
