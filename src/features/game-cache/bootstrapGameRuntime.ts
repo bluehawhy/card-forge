@@ -4,6 +4,7 @@ import {
   createAppsInTossGameUserIdentityProvider,
   createHttpUserRepository,
 } from '../user';
+import { INVALID_ACCESS_ERROR_CODE, isInvalidAccess } from './accessValidation';
 import { gameCache } from './gameCache';
 import { gameRuntime } from './gameRuntime';
 import { createHttpGameServerGateway } from './httpGameServerGateway';
@@ -42,14 +43,32 @@ type InitializingUserService = Pick<
 async function initializeAuthenticatedRuntime(
   users: InitializingUserService,
 ): Promise<void> {
+  gameCache.beginLoad();
+
   try {
     const session = await users.initializeCurrentUser();
     gameCache.setCurrentUser(session.user);
     await gameRuntime.initialize(session.accessToken);
   } catch (error) {
-    if (!shouldUseLocalTestFallback(error)) throw error;
-    gameRuntime.configure(createLocalGameplayTestGateway(), 'local-test');
-    await gameRuntime.initialize('local-gameplay-test');
+    if (shouldUseLocalTestFallback(error)) {
+      gameRuntime.configure(createLocalGameplayTestGateway(), 'local-test');
+      await gameRuntime.initialize('local-gameplay-test');
+      return;
+    }
+
+    if (isInvalidAccess(error)) {
+      gameCache.failLoad({
+        code: INVALID_ACCESS_ERROR_CODE,
+        message: '잘못된 접근입니다.',
+      });
+      return;
+    }
+
+    gameCache.failLoad({
+      code: 'USER_INITIALIZATION_FAILED',
+      message: '사용자 정보를 확인하지 못했습니다.',
+    });
+    throw error;
   }
 }
 
