@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import { styles } from '../assets/sytle/index.style';
 import { BannerAd } from '../src/components/banner-ad';
-import { useGameCache } from '../src/features/game-cache';
+import {
+  INVALID_ACCESS_ERROR_CODE,
+  useGameCache,
+} from '../src/features/game-cache';
 
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange';
 type MenuItem = {
@@ -68,6 +71,26 @@ const menuItems: MenuItem[] = [
 export function HomePage() {
   const navigation = useNavigation();
   const game = useGameCache();
+
+  if (
+    game.status === 'error' &&
+    game.error?.code === INVALID_ACCESS_ERROR_CODE
+  ) {
+    return <AccessStatusPage title="잘못된 접근입니다" />;
+  }
+
+  if (game.currentUser === null && game.status !== 'ready') {
+    return (
+      <AccessStatusPage
+        title={
+          game.status === 'error'
+            ? '사용자 정보를 확인하지 못했습니다'
+            : '사용자 정보를 확인하고 있습니다'
+        }
+      />
+    );
+  }
+
   const user = {
     nickname: game.currentUser?.displayName ?? '모험가',
     level: 1,
@@ -168,6 +191,15 @@ export function HomePage() {
           <Text style={styles.debugButtonText}>DEV · 앱 로그 보기</Text>
         </TouchableOpacity>
       </ScrollView>
+    </View>
+  );
+}
+
+function AccessStatusPage({ title }: { title: string }) {
+  return (
+    <View style={styles.accessStatusScreen}>
+      <Text style={styles.accessStatusMark}>◆</Text>
+      <Text style={styles.accessStatusTitle}>{title}</Text>
     </View>
   );
 }
