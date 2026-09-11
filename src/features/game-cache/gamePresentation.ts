@@ -1,4 +1,5 @@
 import type { ImageSourcePropType } from 'react-native';
+import { getSupabaseGameAssetUrl } from '../../services/supabaseStorage';
 import type { CardElement, CardGrade } from './gameCache';
 
 export const elementLabels: Record<CardElement, string> = {
@@ -36,5 +37,10 @@ const cardImages: Record<string, ImageSourcePropType> = {
 };
 
 export function getCardImage(imageKey: string): ImageSourcePropType {
+  const supabaseUrl = getSupabaseGameAssetUrl(imageKey);
+  if (supabaseUrl) {
+    return { uri: supabaseUrl };
+  }
+
   return cardImages[imageKey] ?? fallbackCardImage;
 }
