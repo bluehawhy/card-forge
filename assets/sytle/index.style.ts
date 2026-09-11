@@ -2,6 +2,9 @@ import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#101722' },
+  accessStatusScreen: { flex: 1, backgroundColor: '#101722', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
+  accessStatusMark: { color: '#D5B87F', fontSize: 28, marginBottom: 16 },
+  accessStatusTitle: { color: '#FFF5E3', fontSize: 20, fontWeight: '800', textAlign: 'center' },
   content: { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 42 },
   eyebrow: { color: '#D5B87F', fontSize: 11, letterSpacing: 4, fontWeight: '700' },
   welcome: { color: '#FFF5E3', fontSize: 26, fontWeight: '800', marginTop: 12 },
