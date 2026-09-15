@@ -2,7 +2,6 @@ import { createRoute } from '@granite-js/react-native';
 import React from 'react';
 import {
   FlatList,
-  ImageBackground,
   Text,
   View,
 } from 'react-native';
@@ -36,11 +35,7 @@ export function CardsPage() {
   const cardColumns = cards.length === 4 ? 2 : 3;
 
   return (
-    <ImageBackground
-      source={require('../assets/images/index/index.jpg')}
-      resizeMode="cover"
-      style={styles.background}
-    >
+    <View style={styles.background}>
       <View pointerEvents="none" style={styles.shade} />
       <View style={styles.container}>
         <Text style={styles.eyebrow}>CARD FORGE</Text>
@@ -153,6 +148,6 @@ export function CardsPage() {
           />
         }
       </View>
-    </ImageBackground>
+    </View>
   );
 }

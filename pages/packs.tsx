@@ -4,7 +4,6 @@ import {
   ActivityIndicator,
   Animated,
   Image,
-  ImageBackground,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -198,11 +197,7 @@ export function PacksPage() {
     setPhase('idle');
   };
   return (
-    <ImageBackground
-      source={require('../assets/images/index/index.jpg')}
-      resizeMode="cover"
-      style={styles.background}
-    >
+    <View style={styles.background}>
       <View pointerEvents="none" style={styles.shade} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.eyebrow}>CARD FORGE</Text>
@@ -385,6 +380,6 @@ export function PacksPage() {
         </View>
 
       </ScrollView>
-    </ImageBackground>
+    </View>
   );
 }

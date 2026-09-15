@@ -37,6 +37,7 @@ import {
   rewardedAdService,
 } from '../src/services/rewardedAdService';
 import { appLogger } from '../src/utils/appLogger';
+import { SvgUri } from 'react-native-svg';
 
 export const Route = createRoute('/forge', {
   validateParams: (params) => params,
@@ -47,6 +48,9 @@ type Phase = 'idle' | 'loading' | 'ad' | 'striking' | 'result';
 
 const wait = (durationMs: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, durationMs));
+
+const FORGE_CARD_ICON_URI =
+  'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/cards.svg';
 
 export function ForgePage() {
   const game = useGameCache();
@@ -264,11 +268,7 @@ export function ForgePage() {
     Platform.OS === 'ios' ? styles.failedImageIos : styles.failedImageGrayscale;
 
   return (
-    <ImageBackground
-      source={require('../assets/images/index/index.jpg')}
-      resizeMode="cover"
-      style={styles.background}
-    >
+    <View style={styles.background}>
       <View pointerEvents="none" style={styles.shade} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.eyebrow}>CARD FORGE</Text>
@@ -465,15 +465,18 @@ export function ForgePage() {
               />
             </Animated.View>
             <View style={styles.anvilWrap}>
-              <View pointerEvents="none" style={styles.anvilGlow} />
               <ImageBackground
                 accessibilityLabel="강화용 모루"
                 resizeMode="contain"
                 source={{ uri: FORGE_ANVIL_DATA_URI }}
                 style={styles.anvilImage}
               >
-                <View style={styles.heatedMetal}>
-                  <View style={styles.heatedMetalCore} />
+                <View pointerEvents="none" style={styles.forgeCardIcon}>
+                  <SvgUri
+                    uri={FORGE_CARD_ICON_URI}
+                    width={76}
+                    height={76}
+                  />
                 </View>
               </ImageBackground>
             </View>
@@ -509,6 +512,6 @@ export function ForgePage() {
           </View>
         </Animated.View>
       )}
-    </ImageBackground>
+    </View>
   );
 }
