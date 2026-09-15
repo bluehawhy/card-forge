@@ -3,8 +3,8 @@ import { StyleSheet } from 'react-native';
 const FORGE_ANVIL_WIDTH = 416;
 const FORGE_ANVIL_HEIGHT = 269;
 const FORGE_HAMMER_SIZE = FORGE_ANVIL_WIDTH * 0.5;
-const FORGE_CARD_SIZE = FORGE_ANVIL_WIDTH * 0.8;
-const FORGE_SPARKS_WIDTH = FORGE_ANVIL_WIDTH * 0.3;
+const FORGE_CARD_SIZE = FORGE_ANVIL_WIDTH * 0.5;
+const FORGE_SPARKS_WIDTH = FORGE_ANVIL_WIDTH * 0.5;
 const FORGE_SPARKS_HEIGHT = FORGE_SPARKS_WIDTH * (2 / 3);
 
 export const styles = StyleSheet.create({
