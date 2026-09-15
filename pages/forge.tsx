@@ -474,8 +474,8 @@ export function ForgePage() {
                 <View pointerEvents="none" style={styles.forgeCardIcon}>
                   <SvgUri
                     uri={FORGE_CARD_ICON_URI}
-                    width={76}
-                    height={76}
+                    width="100%"
+                    height="100%"
                   />
                 </View>
               </ImageBackground>

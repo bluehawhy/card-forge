@@ -1,5 +1,12 @@
 import { StyleSheet } from 'react-native';
 
+const FORGE_ANVIL_WIDTH = 416;
+const FORGE_ANVIL_HEIGHT = 269;
+const FORGE_HAMMER_SIZE = FORGE_ANVIL_WIDTH * 0.5;
+const FORGE_CARD_SIZE = FORGE_ANVIL_WIDTH * 0.8;
+const FORGE_SPARKS_WIDTH = FORGE_ANVIL_WIDTH * 0.3;
+const FORGE_SPARKS_HEIGHT = FORGE_SPARKS_WIDTH * (2 / 3);
+
 export const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: '#12151D' },
   shade: {
@@ -186,8 +193,8 @@ export const styles = StyleSheet.create({
     zIndex: 8,
   },
   fullHammerImage: {
-    width: 236,
-    height: 236,
+    width: FORGE_HAMMER_SIZE,
+    height: FORGE_HAMMER_SIZE,
   },
   hammerHandle: {
     position: 'absolute',
@@ -290,9 +297,9 @@ export const styles = StyleSheet.create({
   },
   anvilWrap: {
     position: 'absolute',
-    top: '47%',
-    width: 346,
-    height: 224,
+    top: '44%',
+    width: FORGE_ANVIL_WIDTH,
+    height: FORGE_ANVIL_HEIGHT,
     alignItems: 'center',
     zIndex: 5,
   },
@@ -308,10 +315,10 @@ export const styles = StyleSheet.create({
   },
   forgeCardIcon: {
     position: 'absolute',
-    top: -34,
-    left: 135,
-    width: 76,
-    height: 76,
+    top: -(FORGE_CARD_SIZE * 0.76),
+    left: (FORGE_ANVIL_WIDTH - FORGE_CARD_SIZE) / 2,
+    width: FORGE_CARD_SIZE,
+    height: FORGE_CARD_SIZE,
     zIndex: 9,
   },
   anvilTop: {
@@ -403,9 +410,9 @@ export const styles = StyleSheet.create({
     zIndex: 12,
   },
   impactSparksImage: {
-    width: 180,
-    height: 120,
-    transform: [{ translateX: -63 }, { translateY: -21 }],
+    width: FORGE_SPARKS_WIDTH,
+    height: FORGE_SPARKS_HEIGHT,
+    transform: [{ translateX: -44 }, { translateY: -15 }],
   },
   strikeStatus: {
     position: 'absolute',
