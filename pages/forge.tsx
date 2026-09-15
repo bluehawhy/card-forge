@@ -23,7 +23,7 @@ import {
 import { MaxLevelAura } from '../src/components/max-level-aura';
 import {
   FORGE_ANVIL_DATA_URI,
-  FORGE_CLANG_DATA_URI,
+  FORGE_IMPACT_SPARKS_DATA_URI,
   FORGE_HAMMER_DATA_URI,
 } from '../src/features/forge/forgeImageData.generated';
 import {
@@ -481,14 +481,11 @@ export function ForgePage() {
               pointerEvents="none"
               style={[styles.fullImpact, impactStyle]}
             >
-              <View style={styles.impactRingOuter} />
-              <View style={styles.impactRingInner} />
-              <Text style={styles.sparkText}>✦ ✦ ✦</Text>
               <Animated.Image
-                accessibilityLabel="망치 타격 불꽃 효과"
+                accessibilityLabel="망치 타격 쇳가루 효과"
                 resizeMode="contain"
-                source={{ uri: FORGE_CLANG_DATA_URI }}
-                style={styles.bangImage}
+                source={{ uri: FORGE_IMPACT_SPARKS_DATA_URI }}
+                style={styles.impactSparksImage}
               />
             </Animated.View>
           </View>
