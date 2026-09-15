@@ -276,6 +276,22 @@ export function ForgePage() {
   };
   const failedImageStyle =
     Platform.OS === 'ios' ? styles.failedImageIos : styles.failedImageGrayscale;
+  const stageMessage =
+    phase === 'ad'
+      ? '광고 시청이 끝나면 강화가 시작돼요'
+      : phase === 'striking'
+        ? `모루를 두드리는 중… ${strikeCount}/3`
+        : phase === 'result' && result
+          ? result === 'SUCCESS'
+            ? '강화 단계가 캐시에 반영됐어요.'
+            : '현재 단계는 유지되고 추가 강화가 잠겼어요.'
+          : selected?.status === 'ENHANCEMENT_LOCKED'
+            ? '강화 실패로 추가 강화가 잠긴 카드예요.'
+            : selected?.status === 'MAX_LEVEL'
+              ? '최고 강화 단계에 도달했어요.'
+              : selected
+                ? null
+                : '아래 보유 카드 중 원하는 카드 한 장을 골라주세요.';
 
   return (
     <View style={styles.background}>
@@ -353,23 +369,9 @@ export function ForgePage() {
               </Text>
             </View>
           )}
-          <Text style={styles.stageText}>
-            {phase === 'ad'
-              ? '광고 시청이 끝나면 강화가 시작돼요'
-              : phase === 'striking'
-                ? `모루를 두드리는 중… ${strikeCount}/3`
-                : phase === 'result' && result
-                  ? result === 'SUCCESS'
-                    ? '강화 단계가 캐시에 반영됐어요.'
-                    : '현재 단계는 유지되고 추가 강화가 잠겼어요.'
-                  : selected?.status === 'ENHANCEMENT_LOCKED'
-                    ? '강화 실패로 추가 강화가 잠긴 카드예요.'
-                    : selected?.status === 'MAX_LEVEL'
-                      ? '최고 강화 단계에 도달했어요.'
-                      : selected
-                        ? `${selected.enhancementLevel}강 → ${selected.enhancementLevel + 1}강`
-                        : '아래 보유 카드 중 원하는 카드 한 장을 골라주세요.'}
-          </Text>
+          {stageMessage ? (
+            <Text style={styles.stageText}>{stageMessage}</Text>
+          ) : null}
         </View>
         <CardPicker
           cards={game.cards}

@@ -38,7 +38,7 @@ Granite Router는 `pages/` 폴더를 기준으로 경로와 타입을 생성하�
 | `pages/card-detail.tsx` | `/card-detail` |
 | `pages/forge.tsx` | `/forge` |
 | `pages/packs.tsx` | `/packs` |
-| `pages/collection.tsx` | `/collection` |
+| `pages/card_collection.tsx` | `/card_collection` |
 
 각 페이지는 `createRoute`로 경로, 파라미터 검증, 화면 컴포넌트를 선언한다.
 

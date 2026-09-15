@@ -26,10 +26,10 @@ import { useGameCache } from '../src/features/game-cache';
 
 type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange';
 type MenuItem = {
-  path: AppRoutes;
+  path: AppRoutes | null;
   title: string;
   description: string;
-  iconUri: string;
+  iconUri?: string;
   accent: string;
 };
 
@@ -43,11 +43,19 @@ const characterCardUri =
 
 const menuItems: MenuItem[] = [
   {
+    path: '/packs',
+    title: '카드 상점',
+    description: '새로운 원소 카드 뽑기',
+    iconUri:
+      'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/cards.svg',
+    accent: '#C497FF',
+  },
+  {
     path: '/cards',
     title: '카드 보관함',
     description: '수집한 원소 카드 확인',
     iconUri:
-      'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/collection.svg',
+      'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/card_storage.svg',
     accent: '#72B6FF',
   },
   {
@@ -59,20 +67,20 @@ const menuItems: MenuItem[] = [
     accent: '#FFAF72',
   },
   {
-    path: '/packs',
-    title: '카드 상점',
-    description: '새로운 원소 카드 뽑기',
-    iconUri:
-      'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/cards.svg',
-    accent: '#C497FF',
-  },
-  {
     path: '/exchange',
     title: '포인트 교환소',
     description: '카드와 결정을 포인트로',
     iconUri:
       'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/exchange.svg',
     accent: '#76CFA3',
+  },
+  {
+    path: null,
+    title: '카드 도감',
+    description: '발견한 6원소 카드 확인',
+    iconUri:
+      'https://nmbdwukrvwfaxpasbppj.supabase.co/storage/v1/object/public/images/icons/card_collection.svg',
+    accent: '#72B6FF',
   },
 ];
 
@@ -240,16 +248,24 @@ export function HomePage() {
         <View style={styles.grid}>
           {menuItems.map((item) => (
             <TouchableOpacity
-              key={item.path}
+              key={item.path ?? 'card_collection'}
               accessibilityRole="button"
-              accessibilityLabel={`${item.title} 이동`}
+              accessibilityLabel={
+                item.path ? `${item.title} 이동` : '카드 도감 열기'
+              }
               activeOpacity={0.82}
               // biome-ignore lint/suspicious/noExplicitAny: Granite generated route types are stale until the next build.
-              onPress={() => navigation.navigate(item.path as any)}
+              onPress={() =>
+                item.path
+                  ? navigation.navigate(item.path as any)
+                  : setIsCollectionOpen(true)
+              }
               style={styles.menuCard}
             >
               <View style={[styles.iconWrap, { borderColor: item.accent }]}>
-                <SvgUri uri={item.iconUri} width={31} height={31} />
+                {item.iconUri ? (
+                  <SvgUri uri={item.iconUri} width={31} height={31} />
+                ) : null}
               </View>
               <View style={styles.menuCopy}>
                 <Text style={styles.menuTitle}>{item.title}</Text>
@@ -259,23 +275,6 @@ export function HomePage() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel="카드 도감 열기"
-          activeOpacity={0.82}
-          onPress={() => setIsCollectionOpen(true)}
-          style={styles.collectionButton}
-        >
-          <Text style={styles.collectionMark}>✦</Text>
-          <View style={styles.guideCopy}>
-            <Text style={styles.guideTitle}>카드 도감</Text>
-            <Text style={styles.guideText}>
-              발견한 6원소 카드를 등급별로 확인해 보세요.
-            </Text>
-          </View>
-          <Text style={styles.collectionArrow}>{'›'}</Text>
-        </TouchableOpacity>
 
         <View style={styles.guideCard}>
           <Text style={styles.guideMark}>✦</Text>

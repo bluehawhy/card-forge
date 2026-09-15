@@ -39,6 +39,12 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+it('선택한 카드 아래에 다음 강화 단계 문구를 표시하지 않는다', () => {
+  const screen = render(React.createElement(ForgePage));
+  fireEvent.press(screen.getByLabelText('물 레어 3강 카드 선택'));
+  expect(screen.queryByText('3강 → 4강')).toBeNull();
+});
+
 it('원하는 카드 한 장을 강화하고 캐시의 해당 카드만 갱신한다', async () => {
   const screen = render(React.createElement(ForgePage));
   fireEvent.press(screen.getByLabelText('땅 노말 1강 카드 선택'));

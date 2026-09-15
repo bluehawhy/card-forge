@@ -1,19 +1,19 @@
 import { createRoute } from '@granite-js/react-native';
 import React from 'react';
 import { FlatList, Text, View } from 'react-native';
-import { styles } from '../assets/sytle/collection.style';
+import { styles } from '../assets/sytle/card_collection.style';
 import {
   elementLabels,
   gradeLabels,
   useGameCache,
 } from '../src/features/game-cache';
 
-export const Route = createRoute('/collection', {
+export const Route = createRoute('/card_collection', {
   validateParams: (params) => params,
-  component: CollectionPage,
+  component: CardCollectionPage,
 });
 
-function CollectionPage() {
+function CardCollectionPage() {
   const game = useGameCache();
 
   return (

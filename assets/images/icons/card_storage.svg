@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">Magic card storage box</title>
+  <defs>
+    <linearGradient id="case" x1="50" y1="56" x2="183" y2="211" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42566B"/>
+      <stop offset="1" stop-color="#142130"/>
+    </linearGradient>
+    <linearGradient id="lining" x1="136" y1="55" x2="214" y2="190" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#72B6FF"/>
+      <stop offset="0.45" stop-color="#327FD4"/>
+      <stop offset="1" stop-color="#173B73"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="133" y1="94" x2="193" y2="172" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0B5"/>
+      <stop offset="0.5" stop-color="#E5BB67"/>
+      <stop offset="1" stop-color="#9B642C"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <path d="M29 184 76 139l142 29-43 62-116-12Z" fill="#172636" stroke="#315B88" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M111 65 207 36l18 132-94 28Z" fill="url(#lining)" stroke="#26394B" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m125 78 70-22 11 91-69 22Z" fill="#10223A" opacity="0.8"/>
+
+  <g transform="rotate(-8 171 132)">
+    <rect x="133" y="92" width="76" height="101" rx="9" fill="#EBD49C" stroke="#28384B" stroke-width="7"/>
+    <rect x="128" y="82" width="76" height="101" rx="9" fill="#1B2C3D" stroke="url(#gold)" stroke-width="7"/>
+    <path d="m166 105 8 15 17 3-12 12 3 17-16-8-15 8 3-17-13-12 18-3Z" fill="#72B6FF" filter="url(#glow)"/>
+    <path d="M146 163h41" stroke="#EAC681" stroke-width="5" stroke-linecap="round" opacity="0.72"/>
+  </g>
+
+  <path d="M40 78 131 54l35 133-99 27Z" fill="url(#case)" stroke="#26394B" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m54 91 67-18 27 101-70 19Z" fill="#172636" stroke="#72B6FF" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m91 106 10 18 20 3-15 15 4 20-19-10-18 10 4-20-15-15 20-3Z" fill="url(#gold)" filter="url(#glow)"/>
+  <path d="M51 79 129 59" stroke="#91C9FF" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <path d="M30 184 59 218l116 12" fill="none" stroke="#72B6FF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.72"/>
+</svg>
