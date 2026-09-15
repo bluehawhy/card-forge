@@ -4,6 +4,11 @@ import {
   loadFullScreenAd,
   showFullScreenAd,
 } from '@apps-in-toss/framework';
+import {
+  clearRewardedAdCooldown,
+  isRewardedAdCooldownActive,
+  startRewardedAdCooldown,
+} from './rewardedAdCooldown';
 
 /** 이 프로젝트에서 실제 동작이 확인됐던 보상형 전용 테스트 광고 그룹 ID입니다. */
 export const REWARDED_AD_TEST_ID = 'ait-ad-test-rewarded-id';
@@ -55,11 +60,15 @@ export class RewardedAdService {
       return Promise.reject(new Error('REWARDED_AD_NOT_SUPPORTED'));
     }
 
+    if (isRewardedAdCooldownActive()) {
+      return Promise.reject(new Error('REWARDED_AD_COOLDOWN_ACTIVE'));
+    }
+
     this.loadedAdGroupId = null;
     return this.loadWithFallback([
       REWARDED_AD_TEST_ID,
       REWARDED_AD_INTEGRATED_TEST_ID,
-    ]);
+    ]).then(() => startRewardedAdCooldown());
   }
 
   private loadWithFallback(adGroupIds: readonly string[]): Promise<void> {
@@ -105,6 +114,8 @@ export class RewardedAdService {
             reward = event.data;
           } else if (event.type === 'failedToShow') {
             unregister();
+            this.loadedAdGroupId = null;
+            clearRewardedAdCooldown();
             reject(new Error('REWARDED_AD_FAILED_TO_SHOW'));
           } else if (event.type === 'dismissed') {
             unregister();
@@ -124,6 +135,8 @@ export class RewardedAdService {
         },
         onError: (error) => {
           unregister();
+          this.loadedAdGroupId = null;
+          clearRewardedAdCooldown();
           reject(adError('REWARDED_AD_SHOW_FAILED', error));
         },
       });

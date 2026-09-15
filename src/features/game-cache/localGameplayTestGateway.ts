@@ -126,7 +126,7 @@ export function createLocalGameplayTestGateway(
     },
     async reservePackOpening() {
       const now = Date.now();
-      if (!pendingPackTemplate && now < lastPackReservationAt + 60_000) {
+      if (!pendingPackTemplate && now < lastPackReservationAt + 20_000) {
         throw new Error('PACK_OPEN_COOLDOWN_ACTIVE');
       }
       const replayed = pendingPackTemplate !== null;
@@ -135,7 +135,7 @@ export function createLocalGameplayTestGateway(
       return {
         imageKey: pendingPackTemplate.imageKey,
         startedAt: new Date(now).toISOString(),
-        nextAvailableAt: new Date(now + 60_000).toISOString(),
+        nextAvailableAt: new Date(now + 20_000).toISOString(),
         replayed,
       };
     },

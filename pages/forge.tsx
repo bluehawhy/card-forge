@@ -31,6 +31,7 @@ import {
   gradeLabels,
   useGameCache,
 } from '../src/features/game-cache';
+import { useRewardedAdCooldown } from '../src/hooks/useRewardedAdCooldown';
 import { MAX_ENHANCEMENT_LEVEL } from '../src/services/enhancementService';
 import {
   isRewardedAdSuccess,
@@ -66,6 +67,10 @@ export function ForgePage() {
   const [error, setError] = useState('');
   const [devRewardedAdMode, setDevRewardedAdMode] =
     useState<DevRewardedAdMode>(true);
+  const {
+    cooldownActive: globalAdCooldownActive,
+    cooldownSeconds,
+  } = useRewardedAdCooldown();
   const busy = useRef(false);
   const activeStrike = useRef<Animated.CompositeAnimation | null>(null);
   const hammerProgress = useRef(new Animated.Value(0)).current;
@@ -75,6 +80,9 @@ export function ForgePage() {
     !selected ||
     selected.status !== 'ENHANCEABLE' ||
     selected.enhancementLevel >= MAX_ENHANCEMENT_LEVEL;
+  const cooldownActive =
+    devRewardedAdMode !== 'NO_AD' && globalAdCooldownActive;
+  const enhanceDisabled = unavailable || phase !== 'idle' || cooldownActive;
   const displayedLevel =
     phase === 'striking' && attemptedLevel !== null
       ? attemptedLevel
@@ -147,7 +155,7 @@ export function ForgePage() {
   }, [hammerProgress, impactProgress, phase]);
 
   const enhance = async () => {
-    if (!selected || unavailable || busy.current || phase !== 'idle') return;
+    if (!selected || enhanceDisabled || busy.current) return;
     busy.current = true;
     setError('');
     setResult(null);
@@ -200,7 +208,9 @@ export function ForgePage() {
         raw: reason instanceof Error ? undefined : reason,
       });
       setError(
-        code === 'REWARDED_AD_NOT_SUPPORTED'
+        code === 'REWARDED_AD_COOLDOWN_ACTIVE'
+          ? '다른 광고를 본 뒤 20초가 지나야 강화할 수 있어요.'
+          : code === 'REWARDED_AD_NOT_SUPPORTED'
           ? '현재 환경에서는 광고를 재생할 수 없어요. 토스 앱에서 다시 실행해 주세요.'
           : code === 'REWARDED_AD_DISMISSED_WITHOUT_REWARD' ||
               code === 'REWARDED_AD_REWARD_FAILED'
@@ -405,11 +415,11 @@ export function ForgePage() {
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel="강화 시도"
-                disabled={unavailable || phase !== 'idle'}
+                disabled={enhanceDisabled}
                 onPress={enhance}
                 style={[
                   styles.button,
-                  (unavailable || phase !== 'idle') && styles.disabled,
+                  enhanceDisabled && styles.disabled,
                 ]}
               >
                 {phase !== 'idle' && <ActivityIndicator color="#292015" />}
@@ -420,7 +430,9 @@ export function ForgePage() {
                       ? '광고 시청 중'
                       : phase === 'striking'
                         ? `강화 중 ${strikeCount}/3`
-                        : unavailable
+                        : cooldownActive
+                          ? `${cooldownSeconds}초 후 강화`
+                          : unavailable
                           ? '강화할 수 없음'
                           : '강화 시도'}
                 </Text>

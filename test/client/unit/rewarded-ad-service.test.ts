@@ -13,6 +13,12 @@ import {
   showFullScreenAd,
 } from '@apps-in-toss/framework';
 import {
+  clearRewardedAdCooldown,
+  getRewardedAdCooldownSeconds,
+  isRewardedAdCooldownActive,
+  REWARDED_AD_COOLDOWN_MS,
+} from '../../../src/services/rewardedAdCooldown';
+import {
   REWARDED_AD_INTEGRATED_TEST_ID,
   REWARDED_AD_TEST_ID,
   RewardedAdService,
@@ -28,6 +34,9 @@ function createGateway() {
 }
 
 describe('RewardedAdService', () => {
+  beforeEach(() => clearRewardedAdCooldown());
+  afterEach(() => clearRewardedAdCooldown());
+
   it('현재 공식 개발용 보상형 광고 ID를 사용한다', () => {
     expect(REWARDED_AD_TEST_ID).toBe('ait-ad-test-rewarded-id');
   });
@@ -228,4 +237,42 @@ describe('RewardedAdService', () => {
       }),
     );
   });
+
+  it('모든 광고 서비스 인스턴스가 하나의 20초 쿨타임을 공유한다', async () => {
+    let now = 1_000;
+    const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
+    const gateway = createGateway();
+    gateway.load.mockImplementation(({ onEvent }) => {
+      onEvent({ type: 'loaded' });
+      return jest.fn();
+    });
+    const first = new RewardedAdService(gateway);
+    const second = new RewardedAdService(gateway);
+
+    await first.load();
+
+    expect(getRewardedAdCooldownSeconds()).toBe(20);
+    await expect(second.load()).rejects.toThrow(
+      'REWARDED_AD_COOLDOWN_ACTIVE',
+    );
+
+    now += REWARDED_AD_COOLDOWN_MS;
+    expect(isRewardedAdCooldownActive()).toBe(false);
+    await expect(second.load()).resolves.toBeUndefined();
+    nowSpy.mockRestore();
+  });
+
+  it('광고 로드가 끝내 실패하면 공용 쿨타임을 시작하지 않는다', async () => {
+    const gateway = createGateway();
+    gateway.load.mockImplementation(({ onError }) => {
+      onError({ code: 'NO_FILL' });
+      return jest.fn();
+    });
+
+    await expect(new RewardedAdService(gateway).load()).rejects.toThrow(
+      'REWARDED_AD_LOAD_FAILED',
+    );
+    expect(isRewardedAdCooldownActive()).toBe(false);
+  });
+
 });

@@ -26,6 +26,7 @@ import {
   prefetchCardImage,
   useGameCache,
 } from '../src/features/game-cache';
+import { useRewardedAdCooldown } from '../src/hooks/useRewardedAdCooldown';
 import {
   isRewardedAdSuccess,
   rewardedAdService,
@@ -48,8 +49,10 @@ export function PacksPage() {
   const [devRewardedAdMode, setDevRewardedAdMode] =
     useState<DevRewardedAdMode>(true);
   const [bannerRefreshKey, setBannerRefreshKey] = useState(0);
-  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
-  const [clock, setClock] = useState(() => Date.now());
+  const {
+    cooldownActive: globalAdCooldownActive,
+    cooldownSeconds,
+  } = useRewardedAdCooldown();
   const game = useGameCache();
   const availability = game.packAvailability;
   const checkingStorage = game.status !== 'ready';
@@ -57,10 +60,8 @@ export function PacksPage() {
     availability?.storageFull ||
       game.cards.length >= (availability?.storageCapacity ?? 5),
   );
-  const cooldownSeconds = cooldownUntil
-    ? Math.max(0, Math.ceil((cooldownUntil - clock) / 1_000))
-    : 0;
-  const cooldownActive = cooldownSeconds > 0;
+  const cooldownActive =
+    devRewardedAdMode !== 'NO_AD' && globalAdCooldownActive;
   const drawDisabled =
     phase !== 'idle' || checkingStorage || storageFull || cooldownActive;
   const busy = useRef(false);
@@ -74,19 +75,6 @@ export function PacksPage() {
       animation.stopAnimation();
     };
   }, [animation]);
-
-  useEffect(() => {
-    if (cooldownUntil === null) return;
-
-    const tick = () => {
-      const now = Date.now();
-      setClock(now);
-      if (now >= cooldownUntil) setCooldownUntil(null);
-    };
-    tick();
-    const timer = setInterval(tick, 1_000);
-    return () => clearInterval(timer);
-  }, [cooldownUntil]);
 
   useEffect(() => {
     if (phase !== 'drawing') return;
@@ -132,9 +120,6 @@ export function PacksPage() {
         requestId,
       });
       if (!mounted.current) return;
-      const nextAvailableAt = new Date(reservation.nextAvailableAt).getTime();
-      setClock(Date.now());
-      setCooldownUntil(nextAvailableAt);
       const imagePrefetch = prefetchCardImage(reservation.imageKey);
       if (devRewardedAdMode !== 'NO_AD') {
         setPhase('ad');
@@ -166,10 +151,12 @@ export function PacksPage() {
       if (!mounted.current) return;
       const errorCode = error instanceof Error ? error.message : '';
       setMessage(
-        errorCode === 'CARD_STORAGE_FULL'
+        errorCode === 'REWARDED_AD_COOLDOWN_ACTIVE'
+          ? '다른 광고를 본 뒤 20초가 지나야 다시 이용할 수 있어요.'
+          : errorCode === 'CARD_STORAGE_FULL'
           ? '카드는 최대 5장까지 보유할 수 있어요. 보관함을 정리한 후 다시 시도해 주세요.'
           : errorCode === 'PACK_OPEN_COOLDOWN_ACTIVE'
-            ? '카드는 1분에 한 번만 뽑을 수 있어요. 잠시 후 다시 시도해 주세요.'
+            ? '광고는 20초에 한 번만 볼 수 있어요. 잠시 후 다시 시도해 주세요.'
             : errorCode === 'INVALID_PACK_RESERVATION_RESPONSE'
               ? '카드 뽑기 준비 응답이 올바르지 않아요. 잠시 후 다시 시도해 주세요.'
               : errorCode === 'GAME_SESSION_NOT_INITIALIZED' ||

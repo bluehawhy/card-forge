@@ -25,6 +25,7 @@ import {
   gradeLabels,
   useGameCache,
 } from '../src/features/game-cache';
+import { useRewardedAdCooldown } from '../src/hooks/useRewardedAdCooldown';
 import {
   type CardGrade,
   cardValues,
@@ -50,6 +51,14 @@ export function ExchangePage() {
   const [amount, setAmount] = useState('10000');
   const [devRewardedAdMode, setDevRewardedAdMode] =
     useState<DevRewardedAdMode>(true);
+  const {
+    cooldownActive: globalAdCooldownActive,
+    cooldownSeconds,
+  } = useRewardedAdCooldown();
+  const rewardedAdCooldownActive =
+    tab === 'cards' &&
+    devRewardedAdMode !== 'NO_AD' &&
+    globalAdCooldownActive;
   const [saleReceipt, setSaleReceipt] = useState<{
     cardCount: number;
     crystalReward: number;
@@ -78,6 +87,7 @@ export function ExchangePage() {
       allSelected ? [] : game.cards.map((card) => card.cardId),
     );
   const exchange = async () => {
+    if (rewardedAdCooldownActive) return;
     try {
       if (tab === 'cards') {
         if (devRewardedAdMode !== 'NO_AD') {
@@ -114,7 +124,9 @@ export function ExchangePage() {
       const errorCode = error instanceof Error ? error.message : '';
       Alert.alert(
         '처리 실패',
-        errorCode === 'INSUFFICIENT_CRYSTALS'
+        errorCode === 'REWARDED_AD_COOLDOWN_ACTIVE'
+          ? '다른 광고를 본 뒤 20초가 지나야 카드를 판매할 수 있어요.'
+          : errorCode === 'INSUFFICIENT_CRYSTALS'
           ? '보유 결정이 부족해요.'
           : errorCode === 'REWARDED_AD_DISMISSED_WITHOUT_REWARD' ||
               errorCode === 'REWARDED_AD_REWARD_FAILED'
@@ -263,11 +275,19 @@ export function ExchangePage() {
           />
           <TouchableOpacity
             accessibilityRole="button"
-            disabled={!selectedIds.length}
+            disabled={!selectedIds.length || rewardedAdCooldownActive}
             onPress={exchange}
-            style={[styles.button, !selectedIds.length && styles.disabled]}
+            style={[
+              styles.button,
+              (!selectedIds.length || rewardedAdCooldownActive) &&
+                styles.disabled,
+            ]}
           >
-            <Text style={styles.buttonText}>선택 카드 판매</Text>
+            <Text style={styles.buttonText}>
+              {rewardedAdCooldownActive
+                ? `${cooldownSeconds}초 후 카드 판매`
+                : '선택 카드 판매'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.valueTable}>
