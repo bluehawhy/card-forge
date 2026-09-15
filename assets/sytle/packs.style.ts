@@ -14,7 +14,13 @@ export const styles = StyleSheet.create({
   cardBackCaption: { color: '#AFB5BE', fontSize: 12, marginTop: 20 },
   stageText: { color: '#E4D9C4', textAlign: 'center', fontSize: 14, marginTop: 30 },
   resultTitle: { color: '#F5D390', fontSize: 25, fontWeight: '800', marginBottom: 20 },
-  rewardAuraFrame: { borderRadius: 15 },
+  rewardAuraFrame: {
+    borderRadius: 17,
+    borderWidth: 2,
+    backgroundColor: 'rgba(25, 36, 50, 0.96)',
+    overflow: 'visible',
+    shadowOffset: { width: 0, height: 0 },
+  },
   rewardCard: {
     width: 192,
     aspectRatio: 512 / 720,
@@ -48,6 +54,7 @@ export const styles = StyleSheet.create({
   resultElement: { color: '#AAB6C5', fontSize: 13, marginTop: 6 },
   actions: { width: '100%', maxWidth: 420, gap: 12 },
   drawButtonBanner: { width: '100%' },
+  resultButtonBanner: { width: '100%', marginBottom: 4 },
   hint: { color: '#C6C6CB', fontSize: 13, textAlign: 'center' },
   button: { backgroundColor: '#EAC681', minHeight: 58, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 10, padding: 14 },
   buttonText: { color: '#292015', fontSize: 18, fontWeight: '800' },

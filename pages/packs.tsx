@@ -213,7 +213,27 @@ export function PacksPage() {
           {phase === 'result' && reward ? (
             <>
               <Text style={styles.resultTitle}>카드 당첨!</Text>
-              <View style={styles.rewardAuraFrame}>
+              <View
+                style={[
+                  styles.rewardAuraFrame,
+                  {
+                    borderColor:
+                      reward.enhancementLevel >= 10
+                        ? '#FFD76A'
+                        : cardOutlineColors[reward.grade],
+                    shadowColor:
+                      reward.enhancementLevel >= 10
+                        ? '#FFD76A'
+                        : cardOutlineColors[reward.grade],
+                    shadowOpacity:
+                      reward.enhancementLevel >= 10 ? 0.98 : 0.82,
+                    shadowRadius:
+                      reward.enhancementLevel >= 10 ? 30 : 22,
+                    elevation:
+                      reward.enhancementLevel >= 10 ? 18 : 12,
+                  },
+                ]}
+              >
                 <MaxLevelAura
                   level={reward.enhancementLevel}
                   borderRadius={15}
@@ -297,13 +317,18 @@ export function PacksPage() {
             </Text>
           )}
           {phase === 'result' ? (
-            <TouchableOpacity
+            <>
+              <View style={styles.resultButtonBanner}>
+                <BannerAd key={`result-${bannerRefreshKey}`} />
+              </View>
+              <TouchableOpacity
               accessibilityRole="button"
               style={styles.button}
               onPress={reset}
             >
-              <Text style={styles.buttonText}>확인</Text>
-            </TouchableOpacity>
+                <Text style={styles.buttonText}>확인</Text>
+              </TouchableOpacity>
+            </>
           ) : (
             <>
               <Text style={styles.hint}>
