@@ -8,9 +8,10 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 REFERENCE = ROOT / "assets" / "design-references" / "forge" / "forging-hammer-2_5d-reference.png"
 OUTPUT_DIR = ROOT / "assets" / "models" / "forge"
+APP_IMAGE_DIR = ROOT / "assets" / "images" / "forge"
 BLEND_PATH = OUTPUT_DIR / "forging-hammer-2_5d.blend"
 GLB_PATH = OUTPUT_DIR / "forging-hammer-2_5d.glb"
-PREVIEW_PATH = OUTPUT_DIR / "forging-hammer-2_5d-preview.png"
+PREVIEW_PATH = APP_IMAGE_DIR / "forging-hammer-2_5d.png"
 
 
 def material(name, color, metallic=0.0, roughness=0.5, emission=None):
@@ -72,6 +73,7 @@ bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+APP_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 steel = material("Forged Steel", (0.105, 0.115, 0.125), metallic=0.88, roughness=0.28)
 steel_edge = material("Steel Edge", (0.25, 0.27, 0.29), metallic=0.92, roughness=0.2)
@@ -147,11 +149,11 @@ fill.data.color = (0.35, 0.55, 1.0)
 fill.data.size = 3.0
 look_at(fill, (0.0, 0.0, 1.3))
 
-bpy.ops.object.camera_add(location=(5.2, -8.2, 4.5))
+bpy.ops.object.camera_add(location=(0.0, -10.0, 1.2))
 camera = bpy.context.object
 camera.name = "Camera_2_5D"
 camera.data.type = "ORTHO"
-camera.data.ortho_scale = 6.4
+camera.data.ortho_scale = 5.5
 look_at(camera, (0.0, 0.0, 1.2))
 bpy.context.scene.camera = camera
 
@@ -188,7 +190,16 @@ bpy.ops.export_scene.gltf(
     use_selection=True,
     export_animations=True,
 )
+# Render the visible face straight-on at a neutral pivot angle. The app rotates
+# this sprite into an oblique raised pose and a head-first impact pose.
+strike_action = root.animation_data.action if root.animation_data else None
+if root.animation_data:
+    root.animation_data.action = None
+root.rotation_euler = (0.0, 0.0, 0.0)
+bpy.context.view_layer.update()
 bpy.ops.render.render(write_still=True)
+if root.animation_data:
+    root.animation_data.action = strike_action
 print(f"BLEND={BLEND_PATH}")
 print(f"GLB={GLB_PATH}")
 print(f"PREVIEW={PREVIEW_PATH}")

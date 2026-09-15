@@ -180,8 +180,8 @@ export const styles = StyleSheet.create({
   emberFour: { top: '31%', right: '29%', fontSize: 20 },
   fullHammer: {
     position: 'absolute',
-    top: '23%',
-    right: '17%',
+    top: '24%',
+    right: '22%',
     alignItems: 'center',
     zIndex: 8,
   },
@@ -290,7 +290,7 @@ export const styles = StyleSheet.create({
   },
   anvilWrap: {
     position: 'absolute',
-    top: '49%',
+    top: '50%',
     width: 266,
     height: 172,
     alignItems: 'center',

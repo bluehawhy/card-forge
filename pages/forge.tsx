@@ -221,19 +221,19 @@ export function ForgePage() {
       {
         translateY: hammerProgress.interpolate({
           inputRange: [0, 1],
-          outputRange: [-42, 34],
+          outputRange: [-25, 62],
         }),
       },
       {
         translateX: hammerProgress.interpolate({
           inputRange: [0, 1],
-          outputRange: [18, -8],
+          outputRange: [28, 0],
         }),
       },
       {
         rotate: hammerProgress.interpolate({
           inputRange: [0, 1],
-          outputRange: ['-30deg', '4deg'],
+          outputRange: ['100deg', '135deg'],
         }),
       },
     ],
