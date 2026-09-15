@@ -20,7 +20,6 @@ export const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 10,
     overflow: 'visible',
-    shadowOffset: { width: 0, height: 0 },
   },
   twoColumnCard: { width: '48%' },
   threeColumnCard: { width: '30.5%' },

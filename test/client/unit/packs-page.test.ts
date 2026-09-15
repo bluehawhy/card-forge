@@ -4,6 +4,7 @@ import { Animated } from 'react-native';
 import { PacksPage } from '../../../pages/packs';
 import { gameCache } from '../../../src/features/game-cache';
 import { rewardedAdService } from '../../../src/services/rewardedAdService';
+import { clearRewardedAdCooldown } from '../../../src/services/rewardedAdCooldown';
 import {
   configureTestRuntime,
   initialGameSnapshot,
@@ -19,6 +20,7 @@ const show = jest.mocked(rewardedAdService.show);
 beforeEach(async () => {
   jest.useFakeTimers();
   jest.clearAllMocks();
+  clearRewardedAdCooldown();
   await configureTestRuntime();
   load.mockResolvedValue(undefined);
   show.mockResolvedValue({
@@ -33,6 +35,7 @@ beforeEach(async () => {
   });
 });
 afterEach(() => {
+  clearRewardedAdCooldown();
   jest.useRealTimers();
   jest.restoreAllMocks();
 });

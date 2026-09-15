@@ -22,6 +22,7 @@ import {
   getCardImage,
   gradeLabels,
 } from '../features/game-cache/gamePresentation';
+import { cardOutlineColors } from './card';
 
 interface CardCollectionModalProps {
   collection: readonly CachedCollectionEntry[];
@@ -29,18 +30,17 @@ interface CardCollectionModalProps {
   onClose: () => void;
 }
 
+interface CardCollectionViewProps {
+  collection: readonly CachedCollectionEntry[];
+  headerAccessory?: React.ReactNode;
+  onClose?: () => void;
+}
+
 export function CardCollectionModal({
   collection,
   visible,
   onClose,
 }: CardCollectionModalProps) {
-  const [selectedElement, setSelectedElement] = useState<CardElement>('EARTH');
-  const discoveredByTemplateId = useMemo(
-    () => new Map(collection.map((entry) => [entry.templateId, entry])),
-    [collection],
-  );
-  const cards = cardCatalog.filter((card) => card.element === selectedElement);
-
   return (
     <Modal
       animationType="slide"
@@ -50,14 +50,36 @@ export function CardCollectionModal({
     >
       <View style={modalStyles.backdrop}>
         <View style={modalStyles.sheet}>
-          <View style={modalStyles.header}>
-            <View>
-              <Text style={modalStyles.eyebrow}>CARD COLLECTION</Text>
-              <Text style={modalStyles.title}>카드 도감</Text>
-              <Text style={modalStyles.progress}>
-                발견 {collection.length} / {cardCatalog.length}
-              </Text>
-            </View>
+          <CardCollectionView collection={collection} onClose={onClose} />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function CardCollectionView({
+  collection,
+  headerAccessory,
+  onClose,
+}: CardCollectionViewProps) {
+  const [selectedElement, setSelectedElement] = useState<CardElement>('EARTH');
+  const discoveredByTemplateId = useMemo(
+    () => new Map(collection.map((entry) => [entry.templateId, entry])),
+    [collection],
+  );
+  const cards = cardCatalog.filter((card) => card.element === selectedElement);
+
+  return (
+    <>
+      <View style={modalStyles.header}>
+        <View>
+          <Text style={modalStyles.eyebrow}>CARD COLLECTION</Text>
+          <Text style={modalStyles.title}>카드 도감</Text>
+          <Text style={modalStyles.progress}>
+            발견 {collection.length} / {cardCatalog.length}
+          </Text>
+        </View>
+        {onClose ? (
             <TouchableOpacity
               accessibilityLabel="카드 도감 닫기"
               accessibilityRole="button"
@@ -66,85 +88,93 @@ export function CardCollectionModal({
             >
               <Text style={modalStyles.closeText}>×</Text>
             </TouchableOpacity>
-          </View>
+        ) : null}
+      </View>
 
-          <ScrollView
-            horizontal
-            contentContainerStyle={modalStyles.elementTabs}
-            showsHorizontalScrollIndicator={false}
-          >
-            {cardCatalogElements.map((element) => {
-              const selected = element === selectedElement;
-              return (
-                <TouchableOpacity
-                  key={element}
-                  accessibilityLabel={`${elementLabels[element]} 원소 카드 보기`}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected }}
-                  onPress={() => setSelectedElement(element)}
+      {headerAccessory}
+
+      <ScrollView
+        horizontal
+        style={modalStyles.elementTabsScroll}
+        contentContainerStyle={modalStyles.elementTabs}
+        showsHorizontalScrollIndicator={false}
+      >
+        {cardCatalogElements.map((element) => {
+          const selected = element === selectedElement;
+          return (
+            <TouchableOpacity
+              key={element}
+              accessibilityLabel={`${elementLabels[element]} 원소 카드 보기`}
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              onPress={() => setSelectedElement(element)}
+              style={[
+                modalStyles.elementTab,
+                selected && modalStyles.elementTabSelected,
+              ]}
+            >
+              <Text
+                style={[
+                  modalStyles.elementTabText,
+                  selected && modalStyles.elementTabTextSelected,
+                ]}
+              >
+                {elementLabels[element]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      <ScrollView
+        style={modalStyles.cardScroll}
+        contentContainerStyle={modalStyles.cardList}
+        showsVerticalScrollIndicator={false}
+      >
+        {cardCatalogGrades.map((grade) => {
+          const card = cards.find((entry) => entry.grade === grade);
+          if (!card) return null;
+          const discovered = discoveredByTemplateId.get(card.templateId);
+          return (
+            <View key={card.templateId} style={modalStyles.cardRow}>
+              {discovered ? (
+                <Image
+                  accessibilityLabel={`${card.name} 카드 이미지`}
+                  resizeMode="cover"
+                  source={getCardImage(discovered.imageKey || card.imageKey)}
+                  style={modalStyles.cardImage}
+                />
+              ) : (
+                <View
+                  accessibilityLabel={`${gradeLabels[grade]} 미발견 카드`}
+                  style={[modalStyles.cardImage, modalStyles.unknownCard]}
+                >
+                  <Text style={modalStyles.questionMark}>?</Text>
+                </View>
+              )}
+              <View style={modalStyles.cardCopy}>
+                <Text
                   style={[
-                    modalStyles.elementTab,
-                    selected && modalStyles.elementTabSelected,
+                    modalStyles.grade,
+                    { color: cardOutlineColors[grade] },
                   ]}
                 >
-                  <Text
-                    style={[
-                      modalStyles.elementTabText,
-                      selected && modalStyles.elementTabTextSelected,
-                    ]}
-                  >
-                    {elementLabels[element]}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <ScrollView
-            contentContainerStyle={modalStyles.cardList}
-            showsVerticalScrollIndicator={false}
-          >
-            {cardCatalogGrades.map((grade) => {
-              const card = cards.find((entry) => entry.grade === grade);
-              if (!card) return null;
-              const discovered = discoveredByTemplateId.get(card.templateId);
-              return (
-                <View key={card.templateId} style={modalStyles.cardRow}>
-                  {discovered ? (
-                    <Image
-                      accessibilityLabel={`${card.name} 카드 이미지`}
-                      resizeMode="cover"
-                      source={getCardImage(
-                        discovered.imageKey || card.imageKey,
-                      )}
-                      style={modalStyles.cardImage}
-                    />
-                  ) : (
-                    <View
-                      accessibilityLabel={`${gradeLabels[grade]} 미발견 카드`}
-                      style={[modalStyles.cardImage, modalStyles.unknownCard]}
-                    >
-                      <Text style={modalStyles.questionMark}>?</Text>
-                    </View>
-                  )}
-                  <View style={modalStyles.cardCopy}>
-                    <Text style={modalStyles.grade}>{gradeLabels[grade]}</Text>
-                    <Text style={modalStyles.cardName}>
-                      {discovered ? card.name : '미발견 카드'}
-                    </Text>
-                    <Text style={modalStyles.cardStatus}>
-                      {discovered
-                        ? `발견 완료 · 최고 ${discovered.highestEnhancementLevel}강`
-                        : '카드팩에서 발견할 수 있어요'}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+                  {gradeLabels[grade]}
+                </Text>
+                <Text style={modalStyles.cardName}>
+                  {discovered ? card.name : '미발견 카드'}
+                </Text>
+                <Text style={modalStyles.cardStatus}>
+                  {discovered
+                    ? `발견 완료 · 최고 ${discovered.highestEnhancementLevel}강`
+                    : '카드팩에서 발견할 수 있어요'}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </>
   );
 }
 
@@ -188,6 +218,7 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   closeText: { color: '#E9EEF4', fontSize: 25, lineHeight: 27 },
+  elementTabsScroll: { flexGrow: 0 },
   elementTabs: { gap: 8, paddingVertical: 18 },
   elementTab: {
     minWidth: 58,
@@ -203,6 +234,7 @@ const modalStyles = StyleSheet.create({
   elementTabText: { color: '#929FAF', fontSize: 12, fontWeight: '700' },
   elementTabTextSelected: { color: '#F4D391' },
   cardList: { gap: 10, paddingBottom: 30 },
+  cardScroll: { flex: 1 },
   cardRow: {
     minHeight: 112,
     padding: 10,

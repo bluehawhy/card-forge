@@ -10,7 +10,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { styles } from '../assets/sytle/exchange.style';
+import {
+  exchangeCardAura,
+  styles,
+} from '../assets/sytle/exchange.style';
 import { BannerAd } from '../src/components/banner-ad';
 import { cardOutlineColors } from '../src/components/card';
 import { CardArtwork } from '../src/components/card-artwork';
@@ -36,6 +39,7 @@ import {
   isRewardedAdSuccess,
   rewardedAdService,
 } from '../src/services/rewardedAdService';
+import { startRewardedAdCooldown } from '../src/services/rewardedAdCooldown';
 
 export const Route = createRoute('/exchange', {
   validateParams: (params) => params,
@@ -57,7 +61,6 @@ export function ExchangePage() {
   } = useRewardedAdCooldown();
   const rewardedAdCooldownActive =
     tab === 'cards' &&
-    devRewardedAdMode !== 'NO_AD' &&
     globalAdCooldownActive;
   const [saleReceipt, setSaleReceipt] = useState<{
     cardCount: number;
@@ -97,6 +100,8 @@ export function ExchangePage() {
           if (!rewardSuccess) {
             throw new Error('REWARDED_AD_REWARD_FAILED');
           }
+        } else {
+          startRewardedAdCooldown();
         }
 
         const result = await gameRuntime.actions.sellCards({
@@ -208,6 +213,10 @@ export function ExchangePage() {
           </Text>
           {game.cards.map((card) => {
             const selected = selectedIds.includes(card.cardId);
+            const aura =
+              card.enhancementLevel >= 10
+                ? exchangeCardAura.maxLevel
+                : exchangeCardAura.regular;
             return (
               <TouchableOpacity
                 key={card.cardId}
@@ -215,12 +224,22 @@ export function ExchangePage() {
                 accessibilityState={{ checked: selected }}
                 accessibilityLabel={`${elementLabels[card.element]} ${gradeLabels[card.grade]} ${card.enhancementLevel}강`}
                 onPress={() => toggle(card.cardId)}
-                style={[styles.cardRow, selected && styles.selectedCard]}
+                style={[
+                  styles.cardRow,
+                  { borderColor: cardOutlineColors[card.grade] },
+                  selected && styles.selectedCard,
+                ]}
               >
                 <MaxLevelAura
                   level={card.enhancementLevel}
                   borderRadius={15}
                   color={cardOutlineColors[card.grade]}
+                  {...aura}
+                />
+                <View
+                  pointerEvents="none"
+                  testID="exchange-card-aura-mask"
+                  style={[styles.cardAuraMask, selected && styles.selectedCard]}
                 />
                 <View style={styles.imageWrap}>
                   <CardArtwork

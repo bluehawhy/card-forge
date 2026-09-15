@@ -14,19 +14,26 @@ import {
   View,
 } from 'react-native';
 import { SvgUri } from 'react-native-svg';
-import { styles } from '../assets/sytle/index.style';
+import {
+  indexCharacterAura,
+  styles,
+} from '../assets/sytle/index.style';
 import {
   getPlayerLevel,
   getPlayerLevelStarCount,
 } from '../src/features/player-level/playerLevel';
 import { BannerAd } from '../src/components/banner-ad';
-import { CardCollectionModal } from '../src/components/card-collection-modal';
 import { MaxLevelAura } from '../src/components/max-level-aura';
 import { useGameCache } from '../src/features/game-cache';
 
-type AppRoutes = '/cards' | '/forge' | '/packs' | '/exchange';
+type AppRoutes =
+  | '/card-storage'
+  | '/forge'
+  | '/packs'
+  | '/exchange'
+  | '/card_collection';
 type MenuItem = {
-  path: AppRoutes | null;
+  path: AppRoutes;
   title: string;
   description: string;
   iconUri?: string;
@@ -51,7 +58,7 @@ const menuItems: MenuItem[] = [
     accent: '#C497FF',
   },
   {
-    path: '/cards',
+    path: '/card-storage',
     title: '카드 보관함',
     description: '수집한 원소 카드 확인',
     iconUri:
@@ -75,7 +82,7 @@ const menuItems: MenuItem[] = [
     accent: '#76CFA3',
   },
   {
-    path: null,
+    path: '/card_collection',
     title: '카드 도감',
     description: '발견한 6원소 카드 확인',
     iconUri:
@@ -91,7 +98,6 @@ export function HomePage() {
   const [hasMinimumLoadingElapsed, setHasMinimumLoadingElapsed] =
     useState(false);
   const [isCharacterCardLoaded, setIsCharacterCardLoaded] = useState(false);
-  const [isCollectionOpen, setIsCollectionOpen] = useState(false);
   const environment =
     getOperationalEnvironment() === 'sandbox' ? '샌드박스' : '디폴트';
 
@@ -138,10 +144,11 @@ export function HomePage() {
     !hasMinimumLoadingElapsed;
 
   if (isInitialLoading) {
+    const loadingMessage = '카드의 세계로 들어가는 중';
     return (
       <View
         accessibilityLiveRegion="polite"
-        accessibilityLabel="카드의 세계로 들어가는 중"
+        accessibilityLabel={loadingMessage}
         style={styles.loadingScreen}
       >
         <View pointerEvents="none" style={styles.loadingIcon}>
@@ -160,7 +167,7 @@ export function HomePage() {
             style={styles.characterPreload}
           />
         ) : null}
-        <Text style={styles.loadingTitle}>카드의 세계로 들어가는 중…</Text>
+        <Text style={styles.loadingTitle}>{loadingMessage}…</Text>
         <ActivityIndicator color="#D5B87F" size="small" />
         <View style={styles.loadingBanner}>
           <BannerAd />
@@ -230,7 +237,11 @@ export function HomePage() {
             </View>
           </View>
           <View style={styles.characterWrap}>
-            <MaxLevelAura level={10} borderRadius={0} />
+            <MaxLevelAura
+              level={10}
+              borderRadius={0}
+              {...indexCharacterAura}
+            />
             <Image
               source={{ uri: characterCardUri }}
               style={styles.character}
@@ -248,17 +259,15 @@ export function HomePage() {
         <View style={styles.grid}>
           {menuItems.map((item) => (
             <TouchableOpacity
-              key={item.path ?? 'card_collection'}
+              key={item.path}
               accessibilityRole="button"
-              accessibilityLabel={
-                item.path ? `${item.title} 이동` : '카드 도감 열기'
-              }
+              accessibilityLabel={`${item.title} 이동`}
               activeOpacity={0.82}
               // biome-ignore lint/suspicious/noExplicitAny: Granite generated route types are stale until the next build.
               onPress={() =>
-                item.path
-                  ? navigation.navigate(item.path as any)
-                  : setIsCollectionOpen(true)
+                item.path === '/card_collection'
+                  ? navigation.navigate('/card_collection_loading' as any)
+                  : navigation.navigate(item.path as any)
               }
               style={styles.menuCard}
             >
@@ -297,11 +306,6 @@ export function HomePage() {
           <Text style={styles.debugButtonText}>DEV · 앱 로그 보기</Text>
         </TouchableOpacity>
       </ScrollView>
-      <CardCollectionModal
-        collection={game.collection}
-        onClose={() => setIsCollectionOpen(false)}
-        visible={isCollectionOpen}
-      />
     </View>
   );
 }

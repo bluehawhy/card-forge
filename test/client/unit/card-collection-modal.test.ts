@@ -1,5 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { CardCollectionModal } from '../../../src/components/card-collection-modal';
 import type { CachedCollectionEntry } from '../../../src/features/game-cache';
 
@@ -26,6 +27,9 @@ it('발견 카드와 미발견 카드를 등급별로 표시한다', () => {
   expect(screen.getByText('발견 1 / 36')).toBeTruthy();
   expect(screen.getByText('대지의 수호자')).toBeTruthy();
   expect(screen.getByText('발견 완료 · 최고 3강')).toBeTruthy();
+  expect(StyleSheet.flatten(screen.getByText('레어').props.style).color).toBe(
+    '#72B6FF',
+  );
   expect(screen.getAllByText('미발견 카드')).toHaveLength(5);
 });
 

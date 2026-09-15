@@ -9,7 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { styles } from '../assets/sytle/packs.style';
+import {
+  packRewardCardAura,
+  styles,
+} from '../assets/sytle/packs.style';
 import { BannerAd } from '../src/components/banner-ad';
 import { cardOutlineColors } from '../src/components/card';
 import {
@@ -31,6 +34,7 @@ import {
   isRewardedAdSuccess,
   rewardedAdService,
 } from '../src/services/rewardedAdService';
+import { startRewardedAdCooldown } from '../src/services/rewardedAdCooldown';
 
 export const Route = createRoute('/packs', {
   validateParams: (params) => params,
@@ -60,8 +64,7 @@ export function PacksPage() {
     availability?.storageFull ||
       game.cards.length >= (availability?.storageCapacity ?? 5),
   );
-  const cooldownActive =
-    devRewardedAdMode !== 'NO_AD' && globalAdCooldownActive;
+  const cooldownActive = globalAdCooldownActive;
   const drawDisabled =
     phase !== 'idle' || checkingStorage || storageFull || cooldownActive;
   const busy = useRef(false);
@@ -113,6 +116,8 @@ export function PacksPage() {
       if (devRewardedAdMode !== 'NO_AD') {
         await rewardedAdService.load();
         if (!mounted.current) return;
+      } else {
+        startRewardedAdCooldown();
       }
 
       const reservation = await gameRuntime.actions.reservePackOpening({
@@ -203,16 +208,6 @@ export function PacksPage() {
                       reward.enhancementLevel >= 10
                         ? '#FFD76A'
                         : cardOutlineColors[reward.grade],
-                    shadowColor:
-                      reward.enhancementLevel >= 10
-                        ? '#FFD76A'
-                        : cardOutlineColors[reward.grade],
-                    shadowOpacity:
-                      reward.enhancementLevel >= 10 ? 0.98 : 0.82,
-                    shadowRadius:
-                      reward.enhancementLevel >= 10 ? 30 : 22,
-                    elevation:
-                      reward.enhancementLevel >= 10 ? 18 : 12,
                   },
                 ]}
               >
@@ -220,6 +215,9 @@ export function PacksPage() {
                   level={reward.enhancementLevel}
                   borderRadius={15}
                   color={cardOutlineColors[reward.grade]}
+                  {...(reward.enhancementLevel >= 10
+                    ? packRewardCardAura.maxLevel
+                    : packRewardCardAura.regular)}
                 />
                 <View style={styles.rewardCard}>
                   <Image

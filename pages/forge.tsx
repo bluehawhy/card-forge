@@ -11,7 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { styles } from '../assets/sytle/forge.style';
+import {
+  forgeHeroCardAura,
+  styles,
+} from '../assets/sytle/forge.style';
 import { BannerAd } from '../src/components/banner-ad';
 import { cardOutlineColors } from '../src/components/card';
 import { CardArtwork } from '../src/components/card-artwork';
@@ -37,6 +40,7 @@ import {
   isRewardedAdSuccess,
   rewardedAdService,
 } from '../src/services/rewardedAdService';
+import { startRewardedAdCooldown } from '../src/services/rewardedAdCooldown';
 import { appLogger } from '../src/utils/appLogger';
 import { SvgUri } from 'react-native-svg';
 
@@ -80,8 +84,7 @@ export function ForgePage() {
     !selected ||
     selected.status !== 'ENHANCEABLE' ||
     selected.enhancementLevel >= MAX_ENHANCEMENT_LEVEL;
-  const cooldownActive =
-    devRewardedAdMode !== 'NO_AD' && globalAdCooldownActive;
+  const cooldownActive = globalAdCooldownActive;
   const enhanceDisabled = unavailable || phase !== 'idle' || cooldownActive;
   const displayedLevel =
     phase === 'striking' && attemptedLevel !== null
@@ -175,6 +178,8 @@ export function ForgePage() {
         if (!rewardSuccess) {
           throw new Error('REWARDED_AD_REWARD_FAILED');
         }
+      } else {
+        startRewardedAdCooldown();
       }
 
       setPhase('striking');
@@ -323,7 +328,6 @@ export function ForgePage() {
                   styles.heroAuraFrame,
                   {
                     borderColor: heroAuraColor,
-                    shadowColor: heroAuraColor,
                   },
                 ]}
               >
@@ -331,6 +335,9 @@ export function ForgePage() {
                   level={displayedLevel ?? 0}
                   borderRadius={17}
                   color={cardOutlineColors[selected.grade]}
+                  {...((displayedLevel ?? 0) >= 10
+                    ? forgeHeroCardAura.maxLevel
+                    : forgeHeroCardAura.regular)}
                 />
                 <View
                   style={[styles.cardFrame, failed && styles.failedCardFrame]}

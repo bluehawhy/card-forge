@@ -1,5 +1,29 @@
 import { StyleSheet } from 'react-native';
 
+/** 교환소의 가로형 카드 크기에 맞춘 외부 오라 값입니다. */
+export const exchangeCardAura = {
+  regular: {
+    uniformShadow: true,
+    wideBlurRadius: 11.2,
+    coreBlurRadius: 5.6,
+    wideElevation: 7,
+    coreElevation: 4.2,
+    spreadScale: 1.0056,
+    wideOpacity: 0.77,
+    coreOpacity: 0.49,
+  },
+  maxLevel: {
+    uniformShadow: true,
+    wideBlurRadius: 16.8,
+    coreBlurRadius: 8.4,
+    wideElevation: 11.2,
+    coreElevation: 7,
+    spreadScale: 1.0112,
+    wideOpacity: 1,
+    coreOpacity: 0.77,
+  },
+} as const;
+
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#101722' },
   content: { padding: 22, paddingBottom: 44, gap: 14 },
@@ -20,7 +44,8 @@ export const styles = StyleSheet.create({
   selectAllText: { color: '#F4D391', fontSize: 12, fontWeight: '700' },
   heading: { color: '#F1F5F9', fontSize: 18, fontWeight: '700' },
   muted: { color: '#A3B1C3', fontSize: 13, lineHeight: 20 },
-  cardRow: { flexDirection: 'row', gap: 16, padding: 14, backgroundColor: '#1A2432', borderRadius: 15, alignItems: 'center' },
+  cardRow: { flexDirection: 'row', gap: 16, padding: 14, backgroundColor: '#1A2432', borderWidth: 1, borderRadius: 15, alignItems: 'center', overflow: 'visible' },
+  cardAuraMask: { position: 'absolute', top: 1, right: 1, bottom: 1, left: 1, borderRadius: 14, backgroundColor: '#1A2432' },
   selectedCard: { backgroundColor: '#29303A' },
   imageWrap: { width: 64, height: 90, position: 'relative' },
   cardImage: { width: '100%', height: '100%', resizeMode: 'contain' },

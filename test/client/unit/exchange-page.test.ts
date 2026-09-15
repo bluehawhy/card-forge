@@ -1,9 +1,10 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { Alert } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 import { ExchangePage } from '../../../pages/exchange';
 import { gameCache } from '../../../src/features/game-cache';
 import { rewardedAdService } from '../../../src/services/rewardedAdService';
+import { clearRewardedAdCooldown } from '../../../src/services/rewardedAdCooldown';
 import { configureTestRuntime } from './game-runtime.fixture';
 
 jest.mock('@granite-js/react-native', () => ({ createRoute: jest.fn() }));
@@ -18,6 +19,7 @@ jest.mock('../../../src/services/rewardedAdService', () => ({
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  clearRewardedAdCooldown();
   await configureTestRuntime();
   jest.mocked(rewardedAdService.load).mockResolvedValue(undefined);
   jest.mocked(rewardedAdService.show).mockResolvedValue({
@@ -27,7 +29,55 @@ beforeEach(async () => {
   });
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => {
+  clearRewardedAdCooldown();
+  jest.restoreAllMocks();
+});
+
+it('카드 행의 등급색 광원은 내부를 가리고 테두리 밖에 표시한다', () => {
+  const screen = render(React.createElement(ExchangePage));
+  const rareCard = screen.getByLabelText('물 레어 3강');
+
+  expect(StyleSheet.flatten(rareCard.props.style)).toMatchObject({
+    borderColor: '#72B6FF',
+    borderWidth: 1,
+  });
+  expect(rareCard.findByProps({ testID: 'exchange-card-aura-mask' })).toBeTruthy();
+  expect(
+    StyleSheet.flatten(
+      rareCard.findByProps({ testID: 'grade-color-wide-glow' }).props.style,
+    ),
+  ).toMatchObject({
+    shadowRadius: 11.2,
+    shadowOpacity: 0,
+    elevation: 0,
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 0,
+        blurRadius: 11.2,
+        color: 'rgba(114, 182, 255, 0.77)',
+      },
+    ],
+  });
+  expect(
+    StyleSheet.flatten(
+      rareCard.findByProps({ testID: 'grade-color-core-glow' }).props.style,
+    ),
+  ).toMatchObject({
+    shadowRadius: 5.6,
+    shadowOpacity: 0,
+    elevation: 0,
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 0,
+        blurRadius: 5.6,
+        color: 'rgba(114, 182, 255, 0.49)',
+      },
+    ],
+  });
+});
 
 it('선택한 1~5장만 판매하고 결정과 보관함을 캐시에 반영한다', async () => {
   const screen = render(React.createElement(ExchangePage));

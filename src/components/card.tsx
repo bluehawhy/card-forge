@@ -27,6 +27,30 @@ export const cardOutlineColors: Record<CardGrade, string> = {
   LEGENDARY: '#FFE080',
 };
 
+/** 160px 재사용 카드 위젯 전용 오라 값입니다. */
+const reusableCardAura = {
+  regular: {
+    uniformShadow: true,
+    wideBlurRadius: 22,
+    coreBlurRadius: 12,
+    wideElevation: 11,
+    coreElevation: 8,
+    spreadScale: 1.015,
+    wideOpacity: 0.78,
+    coreOpacity: 0.62,
+  },
+  maxLevel: {
+    uniformShadow: true,
+    wideBlurRadius: 34,
+    coreBlurRadius: 18,
+    wideElevation: 18,
+    coreElevation: 14,
+    spreadScale: 1.025,
+    wideOpacity: 1,
+    coreOpacity: 0.92,
+  },
+} as const;
+
 export interface CardProps {
   card: Pick<CachedOwnedCard, 'name' | 'grade' | 'imageKey' | 'enhancementLevel'>;
   /** Supabase URL은 { uri: url }, 로컬 이미지는 require(...)로 전달합니다. */
@@ -50,6 +74,9 @@ export function Card({ card, imageSource, style }: CardProps) {
         level={card.enhancementLevel}
         borderRadius={14}
         color={outlineColor}
+        {...(card.enhancementLevel >= 10
+          ? reusableCardAura.maxLevel
+          : reusableCardAura.regular)}
       />
       <Image source={source} style={styles.image} resizeMode="cover" />
       <View style={[styles.footer, { borderTopColor: outlineColor }]}>

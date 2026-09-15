@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import { styles } from '../assets/sytle/cards.style';
 import { CardArtwork } from '../src/components/card-artwork';
-import { MaxLevelAura } from '../src/components/max-level-aura';
 import {
   type CardGrade,
   elementLabels,
@@ -15,9 +14,9 @@ import {
   useGameCache,
 } from '../src/features/game-cache';
 
-export const Route = createRoute('/cards', {
+export const Route = createRoute('/card-storage', {
   validateParams: (params) => params,
-  component: CardsPage,
+  component: CardStoragePage,
 });
 
 const rarityColors: Record<CardGrade, string> = {
@@ -29,7 +28,13 @@ const rarityColors: Record<CardGrade, string> = {
   LEGENDARY: '#FFE080',
 };
 
-export function CardsPage() {
+function withAlpha(hexColor: string, alpha: number) {
+  const hex = hexColor.replace('#', '');
+  const value = Number.parseInt(hex, 16);
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
+export function CardStoragePage() {
   const game = useGameCache();
   const cards = game.cards;
   const cardColumns = cards.length === 4 ? 2 : 3;
@@ -103,17 +108,25 @@ export function CardsPage() {
                       item.enhancementLevel >= 10
                         ? '#FFD76A'
                         : rarityColors[item.grade],
-                    shadowOpacity: item.enhancementLevel >= 10 ? 0.95 : 0.72,
-                    shadowRadius: item.enhancementLevel >= 10 ? 22 : 14,
-                    elevation: item.enhancementLevel >= 10 ? 14 : 8,
+                    shadowOpacity: 0,
+                    elevation: 0,
+                    boxShadow: [
+                      {
+                        offsetX: 0,
+                        offsetY: 0,
+                        blurRadius:
+                          item.enhancementLevel >= 10 ? 12 : 8,
+                        color: withAlpha(
+                          item.enhancementLevel >= 10
+                            ? '#FFD76A'
+                            : rarityColors[item.grade],
+                          item.enhancementLevel >= 10 ? 0.65 : 0.42,
+                        ),
+                      },
+                    ],
                   },
                 ]}
               >
-                <MaxLevelAura
-                  level={item.enhancementLevel}
-                  borderRadius={15}
-                  color={rarityColors[item.grade]}
-                />
                 <View
                   style={[
                     styles.rarityBadge,

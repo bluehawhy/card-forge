@@ -59,7 +59,7 @@
 
 ### 카드 화면 및 공통 UI
 
-`pages/index.tsx`, `pages/cards.tsx`, `pages/packs.tsx`, `pages/forge.tsx`, `pages/exchange.tsx`, `pages/setting.tsx`, `src/components/card.tsx`, `src/components/card-picker.tsx`, `src/components/max-level-aura.tsx`, `assets/sytle/*.style.ts`
+`pages/index.tsx`, `pages/card-storage.tsx`, `pages/packs.tsx`, `pages/forge.tsx`, `pages/exchange.tsx`, `pages/setting.tsx`, `src/components/card.tsx`, `src/components/card-picker.tsx`, `src/components/max-level-aura.tsx`, `assets/sytle/*.style.ts`
 
 **변경 내용**
 
@@ -144,7 +144,7 @@
 
 ### 클라이언트 캐시 및 서버 연동
 
-`src/features/game-cache/*`, `src/features/user/*`, `src/services/userService.ts`, `pages/index.tsx`, `pages/cards.tsx`, `pages/packs.tsx`, `pages/forge.tsx`, `pages/exchange.tsx`
+`src/features/game-cache/*`, `src/features/user/*`, `src/services/userService.ts`, `pages/index.tsx`, `pages/card-storage.tsx`, `pages/packs.tsx`, `pages/forge.tsx`, `pages/exchange.tsx`
 
 **변경 내용**
 

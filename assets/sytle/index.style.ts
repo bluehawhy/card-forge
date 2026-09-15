@@ -1,5 +1,17 @@
 import { StyleSheet } from 'react-native';
 
+/** 인덱스 캐릭터 카드 크기 전용 오라 값입니다. */
+export const indexCharacterAura = {
+  uniformShadow: true,
+  wideBlurRadius: 34,
+  coreBlurRadius: 18,
+  wideElevation: 18,
+  coreElevation: 14,
+  spreadScale: 1.025,
+  wideOpacity: 1,
+  coreOpacity: 0.92,
+} as const;
+
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#101722' },
   loadingScreen: {
@@ -38,11 +50,14 @@ export const styles = StyleSheet.create({
     borderColor: '#D5B87F',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#D5B87F',
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 10,
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 0,
+        blurRadius: 16,
+        color: 'rgba(213, 184, 127, 0.45)',
+      },
+    ],
   },
   loadingCardMark: {
     color: '#EAC681',

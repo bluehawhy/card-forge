@@ -1,5 +1,29 @@
 import { StyleSheet } from 'react-native';
 
+/** 카드 상점 당첨 카드 크기 전용 오라 값입니다. */
+export const packRewardCardAura = {
+  regular: {
+    uniformShadow: true,
+    wideBlurRadius: 22,
+    coreBlurRadius: 12,
+    wideElevation: 11,
+    coreElevation: 8,
+    spreadScale: 1.015,
+    wideOpacity: 0.78,
+    coreOpacity: 0.62,
+  },
+  maxLevel: {
+    uniformShadow: true,
+    wideBlurRadius: 34,
+    coreBlurRadius: 18,
+    wideElevation: 18,
+    coreElevation: 14,
+    spreadScale: 1.025,
+    wideOpacity: 1,
+    coreOpacity: 0.92,
+  },
+} as const;
+
 export const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: '#12151D' },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(8, 12, 20, 0.75)' },
@@ -8,7 +32,7 @@ export const styles = StyleSheet.create({
   title: { fontSize: 30, color: '#FFF5E3', fontWeight: '800', marginTop: 10 },
   subtitle: { color: '#CCC8C0', fontSize: 15, marginTop: 10 },
   stage: { flex: 1, minHeight: 390, width: '100%', alignItems: 'center', justifyContent: 'center', paddingVertical: 32 },
-  sealedCard: { width: 192, height: 270, borderRadius: 14, borderWidth: 2, borderColor: '#D4B16A', backgroundColor: '#192432', alignItems: 'center', justifyContent: 'center', shadowColor: '#EAC681', shadowOpacity: 0.6, shadowRadius: 24, shadowOffset: { width: 0, height: 0 }, elevation: 10 },
+  sealedCard: { width: 192, height: 270, borderRadius: 14, borderWidth: 2, borderColor: '#D4B16A', backgroundColor: '#192432', alignItems: 'center', justifyContent: 'center', boxShadow: [{ offsetX: 0, offsetY: 0, blurRadius: 24, color: 'rgba(234, 198, 129, 0.6)' }] },
   sparkle: { color: '#EFCE89', fontSize: 62 },
   cardBackTitle: { color: '#F4E2B8', fontSize: 25, fontWeight: '800', letterSpacing: 4, textAlign: 'center', marginTop: 10 },
   cardBackCaption: { color: '#AFB5BE', fontSize: 12, marginTop: 20 },
@@ -19,7 +43,6 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     backgroundColor: 'rgba(25, 36, 50, 0.96)',
     overflow: 'visible',
-    shadowOffset: { width: 0, height: 0 },
   },
   rewardCard: {
     width: 192,

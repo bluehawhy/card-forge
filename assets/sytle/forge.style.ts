@@ -1,5 +1,29 @@
 import { StyleSheet } from 'react-native';
 
+/** 강화소 메인 카드 크기 전용 오라 값입니다. */
+export const forgeHeroCardAura = {
+  regular: {
+    uniformShadow: true,
+    wideBlurRadius: 22,
+    coreBlurRadius: 12,
+    wideElevation: 11,
+    coreElevation: 8,
+    spreadScale: 1.015,
+    wideOpacity: 0.78,
+    coreOpacity: 0.62,
+  },
+  maxLevel: {
+    uniformShadow: true,
+    wideBlurRadius: 34,
+    coreBlurRadius: 18,
+    wideElevation: 18,
+    coreElevation: 14,
+    spreadScale: 1.025,
+    wideOpacity: 1,
+    coreOpacity: 0.92,
+  },
+} as const;
+
 const FORGE_ANVIL_WIDTH = 416;
 const FORGE_ANVIL_HEIGHT = 269;
 const FORGE_HAMMER_SIZE = FORGE_ANVIL_WIDTH * 0.5;
@@ -53,10 +77,6 @@ export const styles = StyleSheet.create({
     borderRadius: 17,
     borderWidth: 2,
     backgroundColor: '#151C2C',
-    shadowOpacity: 0.88,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 16,
     overflow: 'visible',
   },
   cardFrame: {

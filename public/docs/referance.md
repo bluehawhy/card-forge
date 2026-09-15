@@ -34,10 +34,11 @@ Granite Router는 `pages/` 폴더를 기준으로 경로와 타입을 생성하�
 | 파일 | 경로 |
 | --- | --- |
 | `pages/index.tsx` | `/` |
-| `pages/cards.tsx` | `/cards` |
+| `pages/card-storage.tsx` | `/card-storage` |
 | `pages/card-detail.tsx` | `/card-detail` |
 | `pages/forge.tsx` | `/forge` |
 | `pages/packs.tsx` | `/packs` |
+| `pages/card_collection_loading.tsx` | `/card_collection_loading` |
 | `pages/card_collection.tsx` | `/card_collection` |
 
 각 페이지는 `createRoute`로 경로, 파라미터 검증, 화면 컴포넌트를 선언한다.
@@ -45,12 +46,12 @@ Granite Router는 `pages/` 폴더를 기준으로 경로와 타입을 생성하�
 ```tsx
 import { createRoute } from '@granite-js/react-native';
 
-export const Route = createRoute('/cards', {
+export const Route = createRoute('/card-storage', {
   validateParams: (params) => params,
-  component: CardsPage,
+  component: CardStoragePage,
 });
 
-function CardsPage() {
+function CardStoragePage() {
   return null;
 }
 ```
@@ -64,7 +65,7 @@ import { useNavigation } from '@granite-js/react-native';
 
 const navigation = useNavigation();
 
-navigation.navigate('/cards');
+navigation.navigate('/card-storage');
 
 if (navigation.canGoBack()) {
   navigation.goBack();

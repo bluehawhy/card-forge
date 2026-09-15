@@ -8,7 +8,6 @@ import {
 import type { CachedOwnedCard } from '../features/game-cache/gameCache';
 import { elementLabels, gradeLabels } from '../features/game-cache/gamePresentation';
 import { CardArtwork } from './card-artwork';
-import { MaxLevelAura } from './max-level-aura';
 
 interface CardPickerProps {
   cards: readonly CachedOwnedCard[];
@@ -52,15 +51,11 @@ export function CardPicker({
                 onPress={() => onSelect(card.cardId)}
                 style={[
                   styles.cardItem,
+                  { borderColor: rarityColors[card.grade] },
                   selected && styles.selected,
                   disabled && styles.disabled,
                 ]}
               >
-                <MaxLevelAura
-                  level={card.enhancementLevel}
-                  borderRadius={11}
-                  color={rarityColors[card.grade]}
-                />
                 <View
                   style={[
                     styles.rarityBadge,
@@ -123,6 +118,7 @@ const styles = StyleSheet.create({
     width: '18%',
     minWidth: 0,
     backgroundColor: 'rgba(25, 36, 50, 0.96)',
+    borderWidth: 1,
     borderRadius: 11,
     padding: 4,
     overflow: 'visible',

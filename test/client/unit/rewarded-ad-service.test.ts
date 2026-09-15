@@ -238,7 +238,7 @@ describe('RewardedAdService', () => {
     );
   });
 
-  it('모든 광고 서비스 인스턴스가 하나의 20초 쿨타임을 공유한다', async () => {
+  it('광고 흐름 시작 후 모든 광고 서비스 인스턴스가 20초 쿨타임을 공유한다', async () => {
     let now = 1_000;
     const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
     const gateway = createGateway();

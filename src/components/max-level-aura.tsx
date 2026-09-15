@@ -5,6 +5,15 @@ interface MaxLevelAuraProps {
   level: number;
   borderRadius?: number;
   color?: string;
+  blurScale?: number;
+  wideBlurRadius?: number;
+  coreBlurRadius?: number;
+  wideElevation?: number;
+  coreElevation?: number;
+  spreadScale?: number;
+  wideOpacity?: number;
+  coreOpacity?: number;
+  uniformShadow?: boolean;
 }
 
 function withAlpha(hexColor: string, alpha: number) {
@@ -19,10 +28,25 @@ export function MaxLevelAura({
   level,
   borderRadius = 18,
   color,
+  blurScale = 1,
+  wideBlurRadius,
+  coreBlurRadius,
+  wideElevation,
+  coreElevation,
+  spreadScale,
+  wideOpacity,
+  coreOpacity,
+  uniformShadow = false,
 }: MaxLevelAuraProps) {
   const isMaxLevel = level >= 10;
   if (!isMaxLevel && !color) return null;
   const auraColor = isMaxLevel ? '#FFD76A' : (color ?? '#FFD76A');
+  const resolvedWideRadius =
+    wideBlurRadius ?? (isMaxLevel ? 34 : 22) * blurScale;
+  const resolvedCoreRadius =
+    coreBlurRadius ?? (isMaxLevel ? 18 : 12) * blurScale;
+  const resolvedWideOpacity = wideOpacity ?? (isMaxLevel ? 1 : 0.78);
+  const resolvedCoreOpacity = coreOpacity ?? (isMaxLevel ? 0.92 : 0.62);
 
   return (
     <View
@@ -40,10 +64,28 @@ export function MaxLevelAura({
             borderRadius,
             backgroundColor: withAlpha(auraColor, 0.012),
             shadowColor: auraColor,
-            shadowOpacity: isMaxLevel ? 1 : 0.78,
-            shadowRadius: isMaxLevel ? 34 : 22,
-            elevation: isMaxLevel ? 18 : 11,
-            transform: [{ scale: isMaxLevel ? 1.025 : 1.015 }],
+            shadowOpacity: uniformShadow ? 0 : resolvedWideOpacity,
+            shadowRadius: resolvedWideRadius,
+            elevation: uniformShadow
+              ? 0
+              : (wideElevation ?? (isMaxLevel ? 18 : 11) * blurScale),
+            boxShadow: uniformShadow
+              ? [
+                  {
+                    offsetX: 0,
+                    offsetY: 0,
+                    blurRadius: resolvedWideRadius,
+                    color: withAlpha(auraColor, resolvedWideOpacity),
+                  },
+                ]
+              : undefined,
+            transform: [
+              {
+                scale:
+                  spreadScale ??
+                  1 + (isMaxLevel ? 0.025 : 0.015) * blurScale,
+              },
+            ],
           },
         ]}
       />
@@ -57,9 +99,21 @@ export function MaxLevelAura({
             borderRadius,
             backgroundColor: withAlpha(auraColor, 0.01),
             shadowColor: auraColor,
-            shadowOpacity: isMaxLevel ? 0.92 : 0.62,
-            shadowRadius: isMaxLevel ? 18 : 12,
-            elevation: isMaxLevel ? 14 : 8,
+            shadowOpacity: uniformShadow ? 0 : resolvedCoreOpacity,
+            shadowRadius: resolvedCoreRadius,
+            elevation: uniformShadow
+              ? 0
+              : (coreElevation ?? (isMaxLevel ? 14 : 8) * blurScale),
+            boxShadow: uniformShadow
+              ? [
+                  {
+                    offsetX: 0,
+                    offsetY: 0,
+                    blurRadius: resolvedCoreRadius,
+                    color: withAlpha(auraColor, resolvedCoreOpacity),
+                  },
+                ]
+              : undefined,
           },
         ]}
       />
