@@ -23,6 +23,7 @@ import {
 import { MaxLevelAura } from '../src/components/max-level-aura';
 import {
   FORGE_ANVIL_DATA_URI,
+  FORGE_CLANG_DATA_URI,
   FORGE_HAMMER_DATA_URI,
 } from '../src/features/forge/forgeImageData.generated';
 import {
@@ -483,7 +484,12 @@ export function ForgePage() {
               <View style={styles.impactRingOuter} />
               <View style={styles.impactRingInner} />
               <Text style={styles.sparkText}>✦ ✦ ✦</Text>
-              <Text style={styles.bangText}>CLANG</Text>
+              <Animated.Image
+                accessibilityLabel="망치 타격 불꽃 효과"
+                resizeMode="contain"
+                source={{ uri: FORGE_CLANG_DATA_URI }}
+                style={styles.bangImage}
+              />
             </Animated.View>
           </View>
           <View pointerEvents="none" style={styles.strikeStatus}>

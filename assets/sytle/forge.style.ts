@@ -160,7 +160,7 @@ export const styles = StyleSheet.create({
     width: 310,
     height: 180,
     borderRadius: 155,
-    backgroundColor: 'rgba(255, 80, 24, 0.17)',
+    backgroundColor: 'transparent',
     transform: [{ scaleX: 1.15 }],
   },
   emberField: {
@@ -454,13 +454,9 @@ export const styles = StyleSheet.create({
     textShadowColor: '#FF6A28',
     textShadowRadius: 20,
   },
-  bangText: {
-    color: '#FFF7DB',
-    fontSize: 25,
-    fontWeight: '900',
-    letterSpacing: 4,
-    textShadowColor: '#FF4F24',
-    textShadowRadius: 15,
+  bangImage: {
+    width: 196,
+    height: 78,
   },
   strikeStatus: {
     position: 'absolute',
