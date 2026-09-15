@@ -99,6 +99,19 @@ export function CardsPage() {
                   cardColumns === 2
                     ? styles.twoColumnCard
                     : styles.threeColumnCard,
+                  {
+                    borderColor:
+                      item.enhancementLevel >= 10
+                        ? '#FFD76A'
+                        : rarityColors[item.grade],
+                    shadowColor:
+                      item.enhancementLevel >= 10
+                        ? '#FFD76A'
+                        : rarityColors[item.grade],
+                    shadowOpacity: item.enhancementLevel >= 10 ? 0.95 : 0.72,
+                    shadowRadius: item.enhancementLevel >= 10 ? 22 : 14,
+                    elevation: item.enhancementLevel >= 10 ? 14 : 8,
+                  },
                 ]}
               >
                 <MaxLevelAura
