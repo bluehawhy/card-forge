@@ -180,14 +180,14 @@ export const styles = StyleSheet.create({
   emberFour: { top: '31%', right: '29%', fontSize: 20 },
   fullHammer: {
     position: 'absolute',
-    top: '24%',
-    right: '22%',
+    top: '14%',
+    right: '2%',
     alignItems: 'center',
     zIndex: 8,
   },
   fullHammerImage: {
-    width: 168,
-    height: 168,
+    width: 236,
+    height: 236,
   },
   hammerHandle: {
     position: 'absolute',

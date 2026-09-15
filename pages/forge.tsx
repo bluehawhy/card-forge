@@ -220,20 +220,20 @@ export function ForgePage() {
     transform: [
       {
         translateY: hammerProgress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [-25, 62],
+          inputRange: [0, 0.72, 1],
+          outputRange: [-18, 118, 128],
         }),
       },
       {
         translateX: hammerProgress.interpolate({
           inputRange: [0, 1],
-          outputRange: [28, 0],
+          outputRange: [34, -8],
         }),
       },
       {
         rotate: hammerProgress.interpolate({
-          inputRange: [0, 1],
-          outputRange: ['100deg', '135deg'],
+          inputRange: [0, 0.72, 1],
+          outputRange: ['8deg', '-24deg', '-18deg'],
         }),
       },
     ],
